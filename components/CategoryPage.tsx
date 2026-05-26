@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { Article, Category } from '@/lib/types';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/lib/types';
+import NewsItem from './NewsItem';
 
 interface Props {
   category: Category;
@@ -46,7 +47,28 @@ function formatHebrewDate(date: Date): string {
 
 export default function CategoryPage({ category, label, color, articles }: Props) {
   const [scrollPct, setScrollPct] = useState(0);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
+  const openPanel = useCallback((article: Article) => {
+    setSelectedArticle(article);
+    document.body.style.overflow = 'hidden';
+  }, []);
+
+  const closePanel = useCallback(() => {
+    setSelectedArticle(null);
+    document.body.style.overflow = '';
+  }, []);
+
+  // Escape key closes panel
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closePanel();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [closePanel]);
+
+  // Scroll progress bar
   useEffect(() => {
     const handler = () => {
       const pct =
@@ -57,6 +79,8 @@ export default function CategoryPage({ category, label, color, articles }: Props
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
   }, []);
+
+  const panelOpen = selectedArticle !== null;
 
   return (
     <>
@@ -100,7 +124,7 @@ export default function CategoryPage({ category, label, color, articles }: Props
           <div className="cat-hero-line" style={{ background: color }} />
         </div>
 
-        {/* Category tabs — top navigation */}
+        {/* Category tabs */}
         <nav className="cat-tabs">
           <span className="cat-tabs-label">קטגוריות:</span>
           {ALL_CATEGORIES.map((cat) => {
@@ -123,56 +147,94 @@ export default function CategoryPage({ category, label, color, articles }: Props
           })}
         </nav>
 
-        {/* Article list */}
-        <div className="cat-list">
-          {articles.length === 0 ? (
-            <div className="cat-empty">
-              <span>אין כתבות בקטגוריה זו עדיין</span>
-              <span className="cat-empty-hint">הרץ את סקריפט ה-fetch כדי לאכלס</span>
-            </div>
-          ) : (
-            articles.map((article, idx) => (
-              <article
+        {/* Cards grid */}
+        {articles.length === 0 ? (
+          <div className="cat-empty">
+            <span>אין כתבות בקטגוריה זו עדיין</span>
+            <span className="cat-empty-hint">הרץ את סקריפט ה-fetch כדי לאכלס</span>
+          </div>
+        ) : (
+          <div
+            className="cat-cards"
+            style={{ '--cc': color } as React.CSSProperties}
+          >
+            {articles.map((article, idx) => (
+              <NewsItem
                 key={article.id}
-                className="cat-article"
-                style={{
-                  '--cc': color,
-                  '--d': `${(idx * 0.04).toFixed(2)}s`,
-                } as React.CSSProperties}
-              >
-                {/* Left accent border + glow comes from CSS */}
-                <div className="cat-article-inner">
-                  <h2 className="cat-art-title">
-                    {article.title_he ?? article.title}
-                  </h2>
-                  <p className="cat-art-summary">{article.summary_he}</p>
-                  <div className="cat-art-footer">
-                    <div className="cat-art-meta">
-                      <span className="meta-source" style={{ color }}>
-                        {article.source}
-                      </span>
-                      <span className="meta-sep" />
-                      <span className="meta-time" suppressHydrationWarning>
-                        {relativeTimeHe(article.fetched_at)}
-                      </span>
-                    </div>
-                    <a
-                      href={article.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="cat-art-cta"
-                      style={{ color }}
-                    >
-                      פתח מקור ↗
-                    </a>
-                  </div>
-                </div>
-              </article>
-            ))
-          )}
+                article={article}
+                onClick={() => openPanel(article)}
+                animationDelay={`${(idx * 0.03).toFixed(2)}s`}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* Backdrop */}
+      <div
+        className={`overlay${panelOpen ? ' open' : ''}`}
+        onClick={closePanel}
+        aria-hidden="true"
+      />
+
+      {/* Slide panel */}
+      <div
+        className={`panel${panelOpen ? ' open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="פרטי כתבה"
+      >
+        <div className="panel-top">
+          <span className="panel-cat" style={{ color }}>
+            {label}
+          </span>
+          <button className="panel-close" onClick={closePanel} aria-label="סגור">
+            ×
+          </button>
         </div>
 
-      </main>
+        {selectedArticle && (
+          <div className="panel-body">
+            <div className="panel-title">
+              {selectedArticle.title_he ?? selectedArticle.title}
+            </div>
+            <div className="panel-divider" />
+            <p className="panel-summary">{selectedArticle.summary_he}</p>
+            <div className="panel-meta">
+              <span className="meta-source" style={{ color, fontWeight: 600 }}>
+                {selectedArticle.source}
+              </span>
+              <span className="meta-sep" />
+              <span className="meta-time" suppressHydrationWarning>
+                {relativeTimeHe(selectedArticle.fetched_at)}
+              </span>
+            </div>
+            <a
+              className="panel-cta"
+              href={selectedArticle.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                borderColor: color,
+                color: color,
+                background: color + '18',
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget;
+                el.style.background = color;
+                el.style.color = '#000';
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget;
+                el.style.background = color + '18';
+                el.style.color = color;
+              }}
+            >
+              פתח מקור מלא &nbsp;↗
+            </a>
+          </div>
+        )}
+      </div>
     </>
   );
 }
