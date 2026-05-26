@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import type { Article, Category } from '@/lib/types';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/lib/types';
 import NewsItem from './NewsItem';
@@ -139,9 +140,16 @@ export default function NewsGrid({ articles }: Props) {
               className="col"
               style={{ '--cc': cssVar } as React.CSSProperties}
             >
-              {/* Sticky category header */}
+              {/* Sticky category header — links to full category page */}
               <div className="cat-head">
-                <span className="cat-label">{label}</span>
+                <Link
+                  href={`/category/${cat}`}
+                  className="cat-label"
+                  style={{ textDecoration: 'none' }}
+                  title={`כל כתבות ${label}`}
+                >
+                  {label} ›
+                </Link>
                 <div className="cat-line" />
               </div>
 
