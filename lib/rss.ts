@@ -56,6 +56,31 @@ export const RSS_SOURCES: RssSource[] = [
     name: 'Ars Technica',
     category: 'ai-builders',
   },
+  {
+    url: 'https://www.producthunt.com/feed',
+    name: 'Product Hunt',
+    category: 'ai-builders',
+  },
+  {
+    url: 'http://stratechery.com/feed/',
+    name: 'Stratechery',
+    category: 'ai-builders',
+  },
+  {
+    url: 'https://www.blog.google/rss/',
+    name: 'Google Blog',
+    category: 'ai-builders',
+  },
+  {
+    url: 'http://www.aaronsw.com/2002/feeds/pgessays.rss',
+    name: 'Paul Graham',
+    category: 'ai-builders',
+  },
+  {
+    url: 'https://www.inc.com/rss/',
+    name: 'Inc.com',
+    category: 'ai-builders',
+  },
 
   // ── Tech ─────────────────────────────────────────────────────────────────
   {
@@ -81,6 +106,21 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://www.wired.com/feed/rss',
     name: 'Wired',
+    category: 'tech',
+  },
+  {
+    url: 'https://www.cnet.com/rss/news/',
+    name: 'CNET',
+    category: 'tech',
+  },
+  {
+    url: 'https://gizmodo.com/rss',
+    name: 'Gizmodo',
+    category: 'tech',
+  },
+  {
+    url: 'https://thenextweb.com/feed/',
+    name: 'The Next Web',
     category: 'tech',
   },
 
@@ -110,6 +150,31 @@ export const RSS_SOURCES: RssSource[] = [
     name: 'CNBC Markets',
     category: 'economy',
   },
+  {
+    url: 'https://finance.yahoo.com/news/rssindex',
+    name: 'Yahoo Finance',
+    category: 'economy',
+  },
+  {
+    url: 'https://fortune.com/feed',
+    name: 'Fortune',
+    category: 'economy',
+  },
+  {
+    url: 'https://www.forbes.com/business/feed/',
+    name: 'Forbes Business',
+    category: 'economy',
+  },
+  {
+    url: 'https://seekingalpha.com/market_currents.xml',
+    name: 'Seeking Alpha',
+    category: 'economy',
+  },
+  {
+    url: 'https://www.investing.com/rss/news.rss',
+    name: 'Investing.com',
+    category: 'economy',
+  },
 
   // ── News ─────────────────────────────────────────────────────────────────
   {
@@ -135,6 +200,26 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://apnews.com/rss',
     name: 'AP News',
+    category: 'news',
+  },
+  {
+    url: 'http://rss.cnn.com/rss/edition_world.rss',
+    name: 'CNN World',
+    category: 'news',
+  },
+  {
+    url: 'https://news.google.com/rss',
+    name: 'Google News',
+    category: 'news',
+  },
+  {
+    url: 'http://feeds.washingtonpost.com/rss/world',
+    name: 'Washington Post',
+    category: 'news',
+  },
+  {
+    url: 'https://www.yahoo.com/news/rss',
+    name: 'Yahoo News',
     category: 'news',
   },
 
@@ -184,6 +269,16 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://www.one.co.il/rss/',
     name: 'ONE Sport',
+    category: 'sports',
+  },
+  {
+    url: 'https://sports.yahoo.com/rss/',
+    name: 'Yahoo Sports',
+    category: 'sports',
+  },
+  {
+    url: 'https://www.sportskeeda.com/feed',
+    name: 'Sportskeeda',
     category: 'sports',
   },
 ];
