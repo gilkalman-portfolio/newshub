@@ -610,9 +610,9 @@ header {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 48px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
 
 .cat-tabs-label {

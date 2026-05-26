@@ -100,6 +100,29 @@ export default function CategoryPage({ category, label, color, articles }: Props
           <div className="cat-hero-line" style={{ background: color }} />
         </div>
 
+        {/* Category tabs — top navigation */}
+        <nav className="cat-tabs">
+          <span className="cat-tabs-label">קטגוריות:</span>
+          {ALL_CATEGORIES.map((cat) => {
+            const isActive = cat === category;
+            const catColor = CATEGORY_COLORS[cat];
+            return (
+              <Link
+                key={cat}
+                href={`/category/${cat}`}
+                className={`cat-tab${isActive ? ' active' : ''}`}
+                style={
+                  isActive
+                    ? { color: catColor, borderColor: catColor, background: catColor + '18' }
+                    : undefined
+                }
+              >
+                {CATEGORY_LABELS[cat]}
+              </Link>
+            );
+          })}
+        </nav>
+
         {/* Article list */}
         <div className="cat-list">
           {articles.length === 0 ? (
@@ -149,28 +172,6 @@ export default function CategoryPage({ category, label, color, articles }: Props
           )}
         </div>
 
-        {/* Category tabs footer */}
-        <nav className="cat-tabs">
-          <span className="cat-tabs-label">קטגוריות:</span>
-          {ALL_CATEGORIES.map((cat) => {
-            const isActive = cat === category;
-            const catColor = CATEGORY_COLORS[cat];
-            return (
-              <Link
-                key={cat}
-                href={`/category/${cat}`}
-                className={`cat-tab${isActive ? ' active' : ''}`}
-                style={
-                  isActive
-                    ? { color: catColor, borderColor: catColor, background: catColor + '18' }
-                    : undefined
-                }
-              >
-                {CATEGORY_LABELS[cat]}
-              </Link>
-            );
-          })}
-        </nav>
       </main>
     </>
   );
