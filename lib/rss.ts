@@ -176,7 +176,24 @@ export const RSS_SOURCES: RssSource[] = [
     category: 'economy',
   },
 
-  // ── News ─────────────────────────────────────────────────────────────────
+  // ── News — ישראל תמיד ראשון ──────────────────────────────────────────────
+  {
+    url: 'https://www.ynet.co.il/Integration/StoryRss2.xml',
+    name: 'Ynet',
+    category: 'news',
+  },
+  {
+    url: 'https://www.timesofisrael.com/feed/',
+    name: 'Times of Israel',
+    category: 'news',
+  },
+  {
+    url: 'https://www.jpost.com/rss/rssfeedsheadlines.aspx',
+    name: 'Jerusalem Post',
+    category: 'news',
+  },
+
+  // ── News — עולם ──────────────────────────────────────────────────────────
   {
     url: 'https://feeds.bbci.co.uk/news/world/rss.xml',
     name: 'BBC World',
@@ -223,24 +240,24 @@ export const RSS_SOURCES: RssSource[] = [
     category: 'news',
   },
 
-  // ── News — חדשות ישראל ────────────────────────────────────────────────────
+  // ── Sports — ישראל תמיד ראשון ────────────────────────────────────────────
+  {
+    url: 'https://www.sport5.co.il/rss.aspx',
+    name: 'Sport5',
+    category: 'sports',
+  },
+  {
+    url: 'https://www.one.co.il/rss/',
+    name: 'ONE Sport',
+    category: 'sports',
+  },
   {
     url: 'https://www.ynet.co.il/Integration/StoryRss2.xml',
-    name: 'Ynet',
-    category: 'news',
-  },
-  {
-    url: 'https://www.timesofisrael.com/feed/',
-    name: 'Times of Israel',
-    category: 'news',
-  },
-  {
-    url: 'https://www.jpost.com/rss/rssfeedsheadlines.aspx',
-    name: 'Jerusalem Post',
-    category: 'news',
+    name: 'Ynet Sport',
+    category: 'sports',
   },
 
-  // ── Sports ───────────────────────────────────────────────────────────────
+  // ── Sports — עולם ────────────────────────────────────────────────────────
   {
     url: 'https://www.espn.com/espn/rss/news',
     name: 'ESPN',
@@ -254,21 +271,6 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://feeds.bbci.co.uk/sport/rss.xml',
     name: 'BBC Sport',
-    category: 'sports',
-  },
-  {
-    url: 'https://www.ynet.co.il/Integration/StoryRss2.xml',
-    name: 'Ynet Sport',
-    category: 'sports',
-  },
-  {
-    url: 'https://www.sport5.co.il/rss.aspx',
-    name: 'Sport5',
-    category: 'sports',
-  },
-  {
-    url: 'https://www.one.co.il/rss/',
-    name: 'ONE Sport',
     category: 'sports',
   },
   {

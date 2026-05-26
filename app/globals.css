@@ -187,9 +187,9 @@ header {
 .cat-label {
   display: inline-block;
   font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--cc, var(--cat-ai));
   transition: text-shadow 0.2s;
