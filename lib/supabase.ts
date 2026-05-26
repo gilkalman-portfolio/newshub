@@ -10,6 +10,11 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+// In Node.js < 22, Supabase Realtime needs an explicit WebSocket implementation.
+// We conditionally provide 'ws' in non-browser environments (scripts / server).
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const NodeWebSocket = typeof window === 'undefined' ? require('ws') : undefined;
+
 // ---------------------------------------------------------------------------
 // 1. Browser / anon client
 //    Safe to use in Next.js components, API routes, and client bundles.
@@ -32,7 +37,12 @@ if (!supabaseAnonKey) {
   );
 }
 
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase: SupabaseClient = createClient(
+  supabaseUrl,
+  supabaseAnonKey,
+  // Provide ws for Node.js < 22 (no-op in browser where window is defined)
+  NodeWebSocket ? { realtime: { transport: NodeWebSocket } } : {}
+);
 
 // ---------------------------------------------------------------------------
 // 2. Server / admin client (service-role key)
@@ -55,9 +65,10 @@ export const supabaseAdmin: SupabaseClient = createClient(
   supabaseServiceRoleKey,
   {
     auth: {
-      // Service-role clients should not persist sessions or auto-refresh tokens.
       persistSession: false,
       autoRefreshToken: false,
     },
+    // Provide ws for Node.js < 22 (needed by Supabase Realtime client)
+    ...(NodeWebSocket && { realtime: { transport: NodeWebSocket } }),
   }
 );

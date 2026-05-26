@@ -13,9 +13,7 @@
  *   GEMINI_API_KEY
  */
 
-// Load .env.local automatically when running via tsx outside of Next.js
-import 'dotenv/config';
-
+// Note: .env.local is loaded by scripts/_load-env.cjs via --require before this file runs.
 import { supabaseAdmin } from '../lib/supabase';
 import { summarizeArticle } from '../lib/gemini';
 import { RSS_SOURCES, fetchFeed, type FeedItem } from '../lib/rss';

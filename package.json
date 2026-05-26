@@ -7,28 +7,30 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "fetch": "tsx scripts/fetch.ts",
-    "migrate": "tsx scripts/migrate.ts"
+    "fetch": "tsx --require ./scripts/_load-env.cjs scripts/fetch.ts",
+    "migrate": "tsx --require ./scripts/_load-env.cjs scripts/migrate.ts"
   },
   "dependencies": {
-    "next": "15.3.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@supabase/supabase-js": "^2.47.0",
     "@google/generative-ai": "^0.21.0",
-    "rss-parser": "^3.13.0",
+    "@supabase/supabase-js": "^2.47.0",
+    "@types/ws": "^8.18.1",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",
-    "pg": "^8.13.3"
+    "next": "15.3.2",
+    "pg": "^8.13.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "rss-parser": "^3.13.0",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pg": "^8.11.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/pg": "^8.11.10",
-    "typescript": "^5",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "typescript": "^5"
   }
 }
