@@ -4,6 +4,8 @@ import NewsGrid from '@/components/NewsGrid';
 
 export const revalidate = 3600;
 
+const ARTICLES_PER_CATEGORY = 5; // change this to show more/fewer per category
+
 const CATEGORIES: Category[] = ['ai-builders', 'tech', 'economy', 'news', 'sports'];
 
 async function fetchArticles(): Promise<Record<Category, Article[]>> {
@@ -31,14 +33,14 @@ async function fetchArticles(): Promise<Record<Category, Article[]>> {
     ) as Record<Category, Article[]>;
   }
 
-  // Group by category, keep top 5 per category
+  // Group by category, keep top ARTICLES_PER_CATEGORY per category
   const grouped = Object.fromEntries(
     CATEGORIES.map((c) => [c, [] as Article[]])
   ) as Record<Category, Article[]>;
 
   for (const article of data as Article[]) {
     const cat = article.category;
-    if (grouped[cat] && grouped[cat].length < 5) {
+    if (grouped[cat] && grouped[cat].length < ARTICLES_PER_CATEGORY) {
       grouped[cat].push(article);
     }
   }

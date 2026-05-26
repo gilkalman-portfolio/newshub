@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "fetch": "tsx scripts/fetch.ts"
+    "fetch": "tsx scripts/fetch.ts",
+    "migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
     "next": "15.3.2",
@@ -17,12 +18,14 @@
     "@google/generative-ai": "^0.21.0",
     "rss-parser": "^3.13.0",
     "date-fns": "^4.1.0",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.3"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/pg": "^8.11.10",
     "typescript": "^5",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",

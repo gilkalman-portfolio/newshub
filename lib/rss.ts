@@ -138,6 +138,23 @@ export const RSS_SOURCES: RssSource[] = [
     category: 'news',
   },
 
+  // ── News — חדשות ישראל ────────────────────────────────────────────────────
+  {
+    url: 'https://www.ynet.co.il/Integration/StoryRss2.xml',
+    name: 'Ynet',
+    category: 'news',
+  },
+  {
+    url: 'https://www.timesofisrael.com/feed/',
+    name: 'Times of Israel',
+    category: 'news',
+  },
+  {
+    url: 'https://www.jpost.com/rss/rssfeedsheadlines.aspx',
+    name: 'Jerusalem Post',
+    category: 'news',
+  },
+
   // ── Sports ───────────────────────────────────────────────────────────────
   {
     url: 'https://www.espn.com/espn/rss/news',
@@ -162,6 +179,11 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://www.sport5.co.il/rss.aspx',
     name: 'Sport5',
+    category: 'sports',
+  },
+  {
+    url: 'https://www.one.co.il/rss/',
+    name: 'ONE Sport',
     category: 'sports',
   },
 ];

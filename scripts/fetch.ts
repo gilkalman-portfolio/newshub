@@ -25,6 +25,12 @@ import type { RssSource, Category } from '../lib/types';
 // Config
 // ---------------------------------------------------------------------------
 
+// ─── CONFIGURATION ──────────────────────────────────────────────────────────
+const CONFIG = {
+  articlesPerSource: 1,   // how many articles to take per RSS source
+  maxPerCategory: 5,      // max articles stored per category per run
+} as const;
+
 /** Delay between consecutive Gemini API calls to avoid rate-limit errors. */
 const GEMINI_DELAY_MS = 500;
 
@@ -130,13 +136,15 @@ async function main(): Promise<void> {
     )
   );
 
-  // ── Step 2: Collect the top-1 candidate item per source ──────────────────
+  // ── Step 2: Collect candidate items per source ───────────────────────────
   //
-  // Strategy: take only the single most-recent item per source.
-  // This keeps ~1 article per source (~25 total across 25 sources)
-  // and ensures diversity across outlets.
+  // Strategy: take CONFIG.articlesPerSource most-recent items per source, then
+  // cap each category at CONFIG.maxPerCategory to ensure diversity across outlets.
 
   const candidates: PendingArticle[] = [];
+
+  // Track per-category counts so we respect maxPerCategory
+  const categoryCount: Partial<Record<string, number>> = {};
 
   for (const result of feedResults) {
     if (result.status === 'rejected') {
@@ -151,18 +159,27 @@ async function main(): Promise<void> {
       continue;
     }
 
-    // Take only the single most-recent item
-    const topItem = items[0];
+    // Take up to CONFIG.articlesPerSource most-recent items
+    const topItems = items.slice(0, CONFIG.articlesPerSource);
 
-    if (!topItem.url) {
-      console.warn(`[fetch] Top item from "${source.name}" has no URL — skipping.`);
-      continue;
+    for (const item of topItems) {
+      if (!item.url) {
+        console.warn(`[fetch] Item from "${source.name}" has no URL — skipping.`);
+        continue;
+      }
+
+      const catCount = categoryCount[source.category] ?? 0;
+      if (catCount >= CONFIG.maxPerCategory) {
+        console.log(`[fetch] Category "${source.category}" hit maxPerCategory (${CONFIG.maxPerCategory}) — skipping "${source.name}".`);
+        break;
+      }
+
+      candidates.push({ source, item });
+      categoryCount[source.category] = catCount + 1;
     }
-
-    candidates.push({ source, item: topItem });
   }
 
-  console.log(`\n[fetch] Candidate articles (1 per source): ${candidates.length}`);
+  console.log(`\n[fetch] Candidate articles (${CONFIG.articlesPerSource} per source, max ${CONFIG.maxPerCategory}/category): ${candidates.length}`);
 
   // ── Step 3: Dedup against Supabase ───────────────────────────────────────
 
