@@ -89,7 +89,7 @@ export default function CategoryPage({ category, label, color, articles }: Props
         {/* Hero */}
         <div className="cat-hero" style={{ '--cc': color } as React.CSSProperties}>
           <Link href="/" className="cat-back">
-            ← ראשי
+            ראשי →
           </Link>
           <h1 className="cat-hero-title" style={{ color }}>
             {label}
@@ -152,7 +152,7 @@ export default function CategoryPage({ category, label, color, articles }: Props
                         {article.source}
                       </span>
                       <span className="meta-sep" />
-                      <span className="meta-time">
+                      <span className="meta-time" suppressHydrationWarning>
                         {relativeTimeHe(article.fetched_at)}
                       </span>
                     </div>

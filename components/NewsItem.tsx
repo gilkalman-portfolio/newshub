@@ -48,7 +48,7 @@ export default function NewsItem({ article, onClick, animationDelay }: Props) {
       <div className="item-meta">
         <span className="meta-source">{article.source}</span>
         <span className="meta-sep" />
-        <span className="meta-time">{timeStr}</span>
+        <span className="meta-time" suppressHydrationWarning>{timeStr}</span>
       </div>
     </div>
   );

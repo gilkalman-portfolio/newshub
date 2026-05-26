@@ -122,7 +122,6 @@ export default function NewsGrid({ articles }: Props) {
             <div className="status-dot ok" />
             <span className="status-txt">{totalArticles} כתבות</span>
           </div>
-          <a href="/runs" className="runs-link">/runs</a>
         </div>
       </header>
 
@@ -230,7 +229,7 @@ export default function NewsGrid({ articles }: Props) {
                 {selectedArticle.source}
               </span>
               <span className="meta-sep" />
-              <span className="meta-time">
+              <span className="meta-time" suppressHydrationWarning>
                 {relativeTimeHe(selectedArticle.fetched_at)}
               </span>
             </div>
