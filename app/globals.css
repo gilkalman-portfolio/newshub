@@ -8,8 +8,8 @@
   --border-2:   #28283A;
 
   --text-hi:    #F0F0F5;
-  --text-body:  #A2A2A2;
-  --text-muted: #40404E;
+  --text-body:  #B8B8C8;
+  --text-muted: #72728A;
 
   --neon:       #AAEE00;
   --neon-dim:   rgba(170,238,0,0.10);
@@ -156,7 +156,7 @@ header {
 /* COLUMN */
 .col {
   position: relative;
-  padding: 0 0 40px;
+  padding: 10px 0 40px;
 }
 
 .col:not(:last-child)::after {
@@ -187,9 +187,9 @@ header {
 .cat-label {
   display: inline-block;
   font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--cc, var(--cat-ai));
   transition: text-shadow 0.2s;
@@ -207,75 +207,103 @@ header {
 }
 .cat-head:hover .cat-line { opacity: 0.65; }
 
-/* NEWS ITEM */
+/* NEWS ITEM — card style */
 .item {
   position: relative;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
+  margin: 0 10px 10px;
+  padding: 13px 15px 11px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--cc) 22%, transparent);
+  background: color-mix(in srgb, var(--cc) 7%, var(--surface));
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--cc) 8%, transparent);
   cursor: pointer;
-  transition: background 0.18s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s ease, background 0.18s ease;
 
   opacity: 0;
-  transform: translateY(5px);
+  transform: translateY(6px);
   animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) forwards;
   animation-delay: var(--d, 0s);
 }
-.item:last-child { border-bottom: none; }
+.item:last-child { margin-bottom: 10px; }
 
 @keyframes fadeUp {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.item::before {
-  content: '';
-  position: absolute;
-  top: 0; right: 0;
-  width: 2px; height: 0;
-  background: var(--cc, var(--cat-ai));
-  box-shadow: 0 0 8px var(--cc, var(--cat-ai));
-  transition: height 0.24s cubic-bezier(0.22,1,0.36,1);
+.item:hover {
+  border-color: color-mix(in srgb, var(--cc) 50%, transparent);
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--cc) 18%, transparent);
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--cc) 11%, var(--surface));
 }
 
-.item:hover { background: var(--surface-2); }
-.item:hover::before { height: 100%; }
-
-.item-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-hi);
-  line-height: 1.42;
-  margin-bottom: 7px;
-  transition: color 0.15s;
-}
-.item:hover .item-title { color: var(--cc, var(--cat-ai)); }
-
-.item-summary {
-  font-size: 12px;
-  color: var(--text-body);
-  line-height: 1.65;
-  margin-bottom: 10px;
-  opacity: 0.72;
-  transition: opacity 0.15s;
-}
-.item:hover .item-summary { opacity: 1; }
-
-.item-meta {
+.item-header {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 10px;
-  color: var(--text-muted);
+  gap: 7px;
+  margin-bottom: 9px;
 }
-.meta-source { font-weight: 600; }
+
+.item-source-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cc);
+  box-shadow: 0 0 6px var(--cc);
+  flex-shrink: 0;
+}
+
+.item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #D8D8E8;
+  line-height: 1.5;
+  margin-bottom: 11px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.15s;
+}
+.item:hover .item-title { color: #F0F0F8; }
+
+.item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.item-open {
+  font-size: 11px;
+  color: var(--cc);
+  opacity: 0.45;
+  transition: opacity 0.15s;
+}
+.item:hover .item-open { opacity: 1; }
+
+.meta-source {
+  font-family: var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--cc);
+  opacity: 0.75;
+}
+
 .meta-sep {
-  width: 2px; height: 2px;
+  width: 2px;
+  height: 2px;
   border-radius: 50%;
   background: var(--text-muted);
   flex-shrink: 0;
 }
+
 .meta-time {
   font-family: var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace;
   font-size: 10px;
+  color: var(--text-muted);
 }
 
 /* SLIDE PANEL */
@@ -443,7 +471,7 @@ header {
 .cat-page {
   position: relative;
   z-index: 1;
-  max-width: 780px;
+  max-width: min(1200px, 94vw);
   margin: 0 auto;
   padding: 0 24px 80px;
 }

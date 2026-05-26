@@ -25,13 +25,6 @@ function relativeTimeHe(dateStr: string): string {
 }
 
 export default function NewsItem({ article, onClick, animationDelay }: Props) {
-  const title = article.title_he ?? article.title;
-  const excerpt =
-    article.summary_he.length > 100
-      ? article.summary_he.slice(0, 100) + '…'
-      : article.summary_he;
-  const timeStr = relativeTimeHe(article.fetched_at);
-
   return (
     <div
       className="item"
@@ -39,16 +32,25 @@ export default function NewsItem({ article, onClick, animationDelay }: Props) {
       onClick={onClick}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') onClick();
-      }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
     >
-      <div className="item-title">{title}</div>
-      <p className="item-summary">{excerpt}</p>
-      <div className="item-meta">
+      {/* Card header: source indicator */}
+      <div className="item-header">
+        <span className="item-source-dot" aria-hidden="true" />
         <span className="meta-source">{article.source}</span>
-        <span className="meta-sep" />
-        <span className="meta-time" suppressHydrationWarning>{timeStr}</span>
+      </div>
+
+      {/* Card body: title */}
+      <div className="item-title">
+        {article.title_he ?? article.title}
+      </div>
+
+      {/* Card footer: time + open indicator */}
+      <div className="item-footer">
+        <span className="meta-time" suppressHydrationWarning>
+          {relativeTimeHe(article.fetched_at)}
+        </span>
+        <span className="item-open" aria-hidden="true">↗</span>
       </div>
     </div>
   );
