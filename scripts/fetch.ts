@@ -26,7 +26,7 @@ import type { RssSource, Category } from '../lib/types';
 // ─── CONFIGURATION ──────────────────────────────────────────────────────────
 const CONFIG = {
   articlesPerSource: 3,   // fetch 3 articles per RSS source per run
-  maxPerCategory: 15,     // store up to 15 articles per category per run
+  maxPerCategory: 40,     // store up to 40 articles per category per run
 } as const;
 
 /** Delay between consecutive Gemini API calls to avoid rate-limit errors. */
