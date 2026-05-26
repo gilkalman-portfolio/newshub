@@ -4,7 +4,7 @@ import NewsGrid from '@/components/NewsGrid';
 
 export const revalidate = 3600;
 
-const ARTICLES_PER_CATEGORY = 5; // change this to show more/fewer per category
+const ARTICLES_PER_CATEGORY = 10; // change this to show more/fewer per category
 
 const CATEGORIES: Category[] = ['ai-builders', 'tech', 'economy', 'news', 'sports'];
 
