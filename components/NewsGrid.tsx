@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Article, Category } from '@/lib/types';
+import { refreshNews } from '@/app/actions';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/lib/types';
 import NewsItem from './NewsItem';
 
@@ -60,8 +62,23 @@ function relativeTimeHe(dateStr: string): string {
 }
 
 export default function NewsGrid({ articles }: Props) {
+  const router = useRouter();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [scrollPct, setScrollPct] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<string | null>(null);
+
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const { refreshedAt } = await refreshNews();
+      setLastRefresh(refreshedAt);
+      router.refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing, router]);
 
   const openPanel = useCallback((article: Article) => {
     setSelectedArticle(article);
@@ -118,6 +135,16 @@ export default function NewsGrid({ articles }: Props) {
         <span className="logo">NewsHUB</span>
         <span className="header-center">{formatHebrewDate(new Date())}</span>
         <div className="header-right">
+          <button
+            className={`refresh-btn${refreshing ? ' refreshing' : ''}`}
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title={lastRefresh ? `עודכן: ${new Date(lastRefresh).toLocaleTimeString('he-IL')}` : 'רענן כתבות'}
+            aria-label="רענן כתבות"
+          >
+            <span className="refresh-icon" aria-hidden="true">↻</span>
+            <span className="refresh-label">{refreshing ? 'מרענן…' : 'רענן'}</span>
+          </button>
           <div className="status-pill">
             <div className="status-dot ok" />
             <span className="status-txt">{totalArticles} כתבות</span>

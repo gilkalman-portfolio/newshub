@@ -134,6 +134,47 @@ header {
   color: var(--text-muted);
 }
 
+/* Refresh button */
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 150ms, color 150ms, background 150ms;
+  font-family: var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.refresh-btn:hover:not(:disabled) {
+  border-color: var(--neon);
+  color: var(--neon);
+  background: var(--neon-dim);
+}
+.refresh-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.refresh-icon {
+  font-size: 13px;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 600ms linear;
+}
+.refresh-btn.refreshing .refresh-icon {
+  animation: spin 700ms linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.refresh-label {
+  font-size: 10px;
+}
+
 .runs-link {
   font-family: var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace;
   font-size: 10px;
