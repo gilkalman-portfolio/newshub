@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NewsHUB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0B0B0F;
+      --surface:    #111118;
+      --surface-2:  #17171F;
+      --border:     #1E1E2A;
+      --border-2:   #28283A;
+
+      --text-hi:    #F0F0F5;
+      --text-body:  #A2A2A2;
+      --text-muted: #40404E;
+
+      --neon:       #AAEE00;
+      --neon-dim:   rgba(170,238,0,0.10);
+
+      --cat-ai:     #A855F7;
+      --cat-tech:   #06B6D4;
+      --cat-eco:    #10B981;
+      --cat-news:   #F97316;
+      --cat-sport:  #EC4899;
+
+      --panel-w:    440px;
+      --header-h:   48px;
+    }
+
+    html { font-family: 'Rubik', sans-serif; font-size: 14px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-hi);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* scanline texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.012) 2px,
+        rgba(255,255,255,0.012) 3px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* reading progress bar */
+    #prog {
+      position: fixed;
+      top: 0; right: 0; left: 0;
+      height: 2px;
+      background: var(--neon);
+      transform-origin: right;
+      transform: scaleX(0);
+      z-index: 999;
+      box-shadow: 0 0 8px var(--neon);
+      transition: transform 80ms linear;
+    }
+
+    /* HEADER */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      height: var(--header-h);
+      background: rgba(11,11,15,0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--neon);
+      text-shadow: 0 0 16px rgba(170,238,0,0.4);
+      user-select: none;
+    }
+
+    .header-center {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border-2);
+      background: var(--surface);
+    }
+
+    .status-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.ok  { background: var(--cat-eco); animation: blink 2.8s ease-in-out infinite; }
+    .status-dot.err { background: var(--cat-news); }
+
+    @keyframes blink {
+      0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(16,185,129,.5); }
+      50%      { opacity:.5; box-shadow: 0 0 0 5px rgba(16,185,129,0); }
+    }
+
+    .status-txt {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .runs-link {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.15s;
+    }
+    .runs-link:hover { color: var(--neon); }
+
+    /* GRID */
+    .grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* COLUMN */
+    .col {
+      position: relative;
+      padding: 0 0 40px;
+    }
+
+    .col:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 1px; height: 100%;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        var(--border-2) 6%,
+        var(--border-2) 94%,
+        transparent 100%
+      );
+    }
+
+    /* CATEGORY HEADER */
+    .cat-head {
+      position: sticky;
+      top: var(--header-h);
+      z-index: 10;
+      background: var(--bg);
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: default;
+    }
+
+    .cat-label {
+      display: inline-block;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--cc, var(--cat-ai));
+      transition: text-shadow 0.2s;
+    }
+    .cat-head:hover .cat-label {
+      text-shadow: 0 0 12px var(--cc, var(--cat-ai));
+    }
+
+    .cat-line {
+      margin-top: 8px;
+      height: 1px;
+      background: var(--cc, var(--cat-ai));
+      opacity: 0.3;
+      transition: opacity 0.2s;
+    }
+    .cat-head:hover .cat-line { opacity: 0.65; }
+
+    /* NEWS ITEM */
+    .item {
+      position: relative;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.18s ease;
+
+      opacity: 0;
+      transform: translateY(5px);
+      animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) forwards;
+      animation-delay: var(--d, 0s);
+    }
+    .item:last-child { border-bottom: none; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .item::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 2px; height: 0;
+      background: var(--cc, var(--cat-ai));
+      box-shadow: 0 0 8px var(--cc, var(--cat-ai));
+      transition: height 0.24s cubic-bezier(0.22,1,0.36,1);
+    }
+
+    .item:hover { background: var(--surface-2); }
+    .item:hover::before { height: 100%; }
+
+    .item-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-hi);
+      line-height: 1.42;
+      margin-bottom: 7px;
+      transition: color 0.15s;
+    }
+    .item:hover .item-title { color: var(--cc, var(--cat-ai)); }
+
+    .item-summary {
+      font-size: 12px;
+      color: var(--text-body);
+      line-height: 1.65;
+      margin-bottom: 10px;
+      opacity: 0.72;
+      transition: opacity 0.15s;
+    }
+    .item:hover .item-summary { opacity: 1; }
+
+    .item-meta {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .meta-source { font-weight: 600; }
+    .meta-sep {
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .meta-time {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+    }
+
+    /* SLIDE PANEL */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #panel {
+      position: fixed;
+      top: 0; right: 0;
+      width: var(--panel-w);
+      max-width: 95vw;
+      height: 100vh;
+      background: var(--surface);
+      border-left: 1px solid var(--border-2);
+      z-index: 400;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.36s cubic-bezier(0.22,1,0.36,1);
+      display: flex;
+      flex-direction: column;
+    }
+    #panel.open { transform: translateX(0); }
+
+    .panel-top {
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      padding: 14px 20px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .panel-cat {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    .panel-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 1;
+      padding: 0 2px;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .panel-close:hover { color: var(--neon); }
+
+    .panel-body {
+      padding: 24px 20px 40px;
+      flex: 1;
+    }
+
+    .panel-title {
+      font-size: 19px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--text-hi);
+      margin-bottom: 16px;
+    }
+
+    .panel-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 18px;
+    }
+
+    .panel-summary {
+      font-size: 14px;
+      color: var(--text-body);
+      line-height: 1.82;
+      margin-bottom: 28px;
+    }
+
+    .panel-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .panel-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: 1px solid var(--neon);
+      color: var(--neon);
+      background: var(--neon-dim);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: all 0.18s;
+    }
+    .panel-cta:hover {
+      background: var(--neon);
+      color: #000;
+      box-shadow: 0 0 20px rgba(170,238,0,0.25);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+      .col::after { display: none; }
+      #panel { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<header>
+  <span class="logo">NewsHUB</span>
+  <span class="header-center">ראשון, 25 במאי 2025</span>
+  <div class="header-right">
+    <div class="status-pill">
+      <div class="status-dot ok"></div>
+      <span class="status-txt">06:02</span>
+    </div>
+    <a href="#" class="runs-link">/runs</a>
+  </div>
+</header>
+
+<main class="grid">
+
+  <!-- AI & Builders -->
+  <div class="col" style="--cc:var(--cat-ai)">
+    <div class="cat-head"><span class="cat-label">AI &amp; Builders</span><div class="cat-line"></div></div>
+
+    <div class="item" style="--d:.10s"
+      data-cat="AI &amp; Builders"
+      data-title="OpenAI משיקה מודל חדש עם יכולות אג׳נטיות מתקדמות"
+      data-summary="לא assistant — agent. המודל החדש לוקח משימות, מפרק אותן, מריץ כלים ומסיים. ללא השגחה. ללא שאלות. זה המירוץ שכולם רצו לקראתו — ורק עכשיו מתחיל ברצינות."
+      data-source="The Verge" data-time="לפני 3 שעות">
+      <div class="item-title">OpenAI משיקה מודל חדש עם יכולות אג׳נטיות מתקדמות</div>
+      <p class="item-summary">לא assistant — agent. מנהל משימות, מריץ כלים, מסיים. ללא השגחה. המירוץ ל-agentic AI נכנס להילוך גבוה.</p>
+      <div class="item-meta"><span class="meta-source">The Verge</span><span class="meta-sep"></span><span class="meta-time">לפני 3 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.18s"
+      data-cat="AI &amp; Builders"
+      data-title="Google DeepMind מפרסמת מחקר על תכנון ב-LLMs"
+      data-summary="LLMs יודעים לחזות — אבל לתכנן? זו בעיה שונה לגמרי. DeepMind פרסמה שיטה שמשפרת ב-40% את היכולת לפרק בעיות ולבנות תוכניות. הוגש ל-NeurIPS. עוד כמה חודשים ואנחנו יודעים אם זה מחזיק מים."
+      data-source="DeepMind Blog" data-time="לפני 5 שעות">
+      <div class="item-title">Google DeepMind מפרסמת מחקר על תכנון ב-LLMs</div>
+      <p class="item-summary">LLMs טובים לחיזוי — לא לתכנון. DeepMind טוענים +40% שיפור. הוגש ל-NeurIPS, עוד חודשים לוידוא.</p>
+      <div class="item-meta"><span class="meta-source">DeepMind Blog</span><span class="meta-sep"></span><span class="meta-time">לפני 5 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.26s"
+      data-cat="AI &amp; Builders"
+      data-title="Anthropic מגייסת $2B נוספים — הערכת שווי $60B"
+      data-summary="OpenAI שווה $157B, Anthropic $60B. הפער לא ייסגר בסבב הזה. אבל הכסף שם, השרתים יעלו, ו-Claude ממשיך. מי שחיכה שAnthropic תיפול — ימשיך לחכות."
+      data-source="TechCrunch" data-time="לפני 7 שעות">
+      <div class="item-title">Anthropic מגייסת $2B נוספים — הערכת שווי $60B</div>
+      <p class="item-summary">OpenAI שווה $157B, Anthropic $60B. הפער לא נסגר — אבל הכסף קיים ו-Claude ממשיך. מי שחיכה שייפלו ימשיך לחכות.</p>
+      <div class="item-meta"><span class="meta-source">TechCrunch</span><span class="meta-sep"></span><span class="meta-time">לפני 7 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.34s"
+      data-cat="AI &amp; Builders"
+      data-title="Cursor IDE עוברת מיליון משתמשים פעילים"
+      data-summary="שנה. מיליון מפתחים. מגיע לפני VS Code בחיפוש בגוגל. זה כבר לא כלי AI שמעניין — זה ה-IDE שמפתחים בוחרים. Microsoft רואה את זה."
+      data-source="Hacker News" data-time="לפני 9 שעות">
+      <div class="item-title">Cursor IDE עוברת מיליון משתמשים פעילים</div>
+      <p class="item-summary">שנה, מיליון מפתחים, עובר VS Code בחיפוש. זה כבר לא "מעניין" — זה ה-IDE. Microsoft רואה.</p>
+      <div class="item-meta"><span class="meta-source">Hacker News</span><span class="meta-sep"></span><span class="meta-time">לפני 9 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.42s"
+      data-cat="AI &amp; Builders"
+      data-title="60% ממפתחים משתמשים ב-AI יומיומית"
+      data-summary="Copilot ראשון (41%), Claude קפץ מ-9% ל-19% תוך חצי שנה. כל שאר הכלים בצל. הסקר גם שואל על שביעות רצון — התשובות שם פחות מחמיאות."
+      data-source="Stack Overflow" data-time="לפני 11 שעות">
+      <div class="item-title">60% ממפתחים משתמשים ב-AI יומיומית</div>
+      <p class="item-summary">Copilot ראשון (41%), Claude מכפיל נתח ל-19% תוך חצי שנה. מי שמפסיד: כל השאר.</p>
+      <div class="item-meta"><span class="meta-source">Stack Overflow</span><span class="meta-sep"></span><span class="meta-time">לפני 11 שעות</span></div>
+    </div>
+  </div>
+
+  <!-- Tech -->
+  <div class="col" style="--cc:var(--cat-tech)">
+    <div class="cat-head"><span class="cat-label">Tech</span><div class="cat-line"></div></div>
+
+    <div class="item" style="--d:.16s"
+      data-cat="Tech"
+      data-title="אפל: A19 Pro עם Neural Engine מהיר פי 4"
+      data-summary="7 מיליארד פרמטרים על הטלפון. ללא ענן, ללא OpenAI, ללא Siri הישנה. אפל בונה AI שלה בשקט ולא מבקשת רשות מאף אחד. iPhone 17 יהיה הבדיקה הגדולה."
+      data-source="9to5Mac" data-time="לפני 2 שעות">
+      <div class="item-title">אפל: A19 Pro עם Neural Engine מהיר פי 4</div>
+      <p class="item-summary">7B פרמטרים על המכשיר. ללא ענן, ללא OpenAI. אפל בונה AI שלה בשקט — iPhone 17 יהיה הבדיקה.</p>
+      <div class="item-meta"><span class="meta-source">9to5Mac</span><span class="meta-sep"></span><span class="meta-time">לפני 2 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.24s"
+      data-cat="Tech"
+      data-title="Microsoft Copilot+ PC — 40 שעות סוללה, AI ללא ענן"
+      data-summary="$999, 40 שעות סוללה, AI מקומי מלא. מיקרוסופט מהמרת שה-next thing הוא AI ללא חיבור. אפל כבר שם עם M-series. עכשיו שני שחקנים — ושוק שלא בטוח מה הוא רוצה."
+      data-source="The Verge" data-time="לפני 4 שעות">
+      <div class="item-title">Microsoft Copilot+ PC — 40 שעות סוללה, AI ללא ענן</div>
+      <p class="item-summary">$999, 40 שעות, AI מקומי. מיקרוסופט מהמרת על AI ללא חיבור. אפל שם כבר שנה — עכשיו שני שחקנים.</p>
+      <div class="item-meta"><span class="meta-source">The Verge</span><span class="meta-sep"></span><span class="meta-time">לפני 4 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.32s"
+      data-cat="Tech"
+      data-title="Cloudflare Workers AI — חינם, inference ב-200 מדינות"
+      data-summary="AWS גובה על כל millisecond. Cloudflare מציעה inference חינם ב-200 מדינות. זה לא נדיבות — זה שיווק מותקף. המונטיזציה תגיע, כשיהיה לך lock-in."
+      data-source="Cloudflare Blog" data-time="לפני 6 שעות">
+      <div class="item-title">Cloudflare Workers AI — חינם, inference ב-200 מדינות</div>
+      <p class="item-summary">AWS גובה על כל ms. Cloudflare: חינם, 200 מדינות, 20-50ms. לא נדיבות — lock-in מדיניות.</p>
+      <div class="item-meta"><span class="meta-source">Cloudflare Blog</span><span class="meta-sep"></span><span class="meta-time">לפני 6 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.40s"
+      data-cat="Tech"
+      data-title="Android 16: שינוי UI מהותי, Material You 3"
+      data-summary="גוגל מכירה שהעיצוב הנוכחי לא מתחרה. Android 16 מגיע עם אנימציות מחדש ו-dynamic theming לפי שעת היום. האם זה מספיק? מוקדם לדעת. אבל לפחות הם מנסים."
+      data-source="Android Authority" data-time="לפני 8 שעות">
+      <div class="item-title">Android 16: שינוי UI מהותי, Material You 3</div>
+      <p class="item-summary">גוגל מכירה שהעיצוב לא מתחרה. אנימציות מחדש, dynamic theming לפי שעה. מוקדם לדעת אם מספיק.</p>
+      <div class="item-meta"><span class="meta-source">Android Authority</span><span class="meta-sep"></span><span class="meta-time">לפני 8 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.48s"
+      data-cat="Tech"
+      data-title="Figma AI: עיצוב ל-React+Tailwind, אוטומטי"
+      data-summary="פה עד עכשיו: מעצב עיצב, מפתח תרגם. Figma רוצה לקצר את ה'תרגם' לאפס. Q3 2025 — יהיה מעניין לראות כמה קוד שנוצר ישרוד production בלי לגעת בו."
+      data-source="Figma Blog" data-time="לפני 10 שעות">
+      <div class="item-title">Figma AI: עיצוב ל-React+Tailwind, אוטומטי</div>
+      <p class="item-summary">מעצב עיצב, מפתח תרגם — Figma רוצה לבטל את ה'תרגם'. Q3 2025. יהיה מעניין כמה ישרוד production.</p>
+      <div class="item-meta"><span class="meta-source">Figma Blog</span><span class="meta-sep"></span><span class="meta-time">לפני 10 שעות</span></div>
+    </div>
+  </div>
+
+  <!-- Economy -->
+  <div class="col" style="--cc:var(--cat-eco)">
+    <div class="cat-head"><span class="cat-label">Economy</span><div class="cat-line"></div></div>
+
+    <div class="item" style="--d:.22s"
+      data-cat="Economy"
+      data-title='הפד: ריבית ב-4.5% — פאוול שומר קלפים'
+      data-summary='4.5% — לא עלייה, לא ירידה. פאוול מחכה לנתונים שלא מגיעים בסדר הנכון. בינתיים השוק מתמחר ספטמבר ב-62%. כולם מנחשים — פאוול יודע, ולא אומר.'
+      data-source="Reuters" data-time="לפני 1 שעה">
+      <div class="item-title">הפד: ריבית ב-4.5% — פאוול שומר קלפים קרובים לחזה</div>
+      <p class="item-summary">לא עלייה, לא ירידה. השוק מתמחר ספטמבר ב-62%. פאוול יודע — ולא אומר.</p>
+      <div class="item-meta"><span class="meta-source">Reuters</span><span class="meta-sep"></span><span class="meta-time">לפני 1 שעה</span></div>
+    </div>
+
+    <div class="item" style="--d:.30s"
+      data-cat="Economy"
+      data-title="S&amp;P 500 פורץ ל-5,600 — שיא היסטורי"
+      data-summary="5,600. הגיע מ-4,100 לפני שנתיים. NVIDIA, Microsoft, Meta — כל השלושה מכים תחזיות ברבעון. כל מי שאמר מיתון ב-2023 עדיין לא צדק."
+      data-source="Bloomberg" data-time="לפני 3 שעות">
+      <div class="item-title">S&amp;P 500 פורץ ל-5,600 — שיא היסטורי</div>
+      <p class="item-summary">5,600. הגיע מ-4,100 בשנתיים. NVIDIA +4.2%, Microsoft +2.8%, Meta +3.1%. כולם מכים.</p>
+      <div class="item-meta"><span class="meta-source">Bloomberg</span><span class="meta-sep"></span><span class="meta-time">לפני 3 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.38s"
+      data-cat="Economy"
+      data-title="Alphabet רבעון שיא — Cloud עובר $10B לראשונה"
+      data-summary="Cloud +29%, פרסום +18%, מניה +7% after-hours. גוגל שיקמה את עצמה. ChatGPT לא הרג את חיפוש — רק הפחיד אותו לרגע. AWS ו-Azure מתחילים לשמוע צעדים."
+      data-source="WSJ" data-time="לפני 5 שעות">
+      <div class="item-title">Alphabet רבעון שיא — Cloud עובר $10B לראשונה</div>
+      <p class="item-summary">Cloud +29%, פרסום +18%, מניה +7%. ChatGPT לא הרג את חיפוש — רק הפחיד אותו. AWS שומע צעדים.</p>
+      <div class="item-meta"><span class="meta-source">WSJ</span><span class="meta-sep"></span><span class="meta-time">לפני 5 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.46s"
+      data-cat="Economy"
+      data-title="ביטקוין שובר $100,000 — פריצה היסטורית"
+      data-summary="$102,400. BlackRock הביא $1.8B ב-3 ימים דרך ETF. Bitcoin קנה לגיטימציה מוסדית — ומשחק אחרת עכשיו. JPMorgan: יעד $120K. מי שאמר 'bubble' ב-$30K ממשיך לשתוק."
+      data-source="CoinDesk" data-time="לפני 7 שעות">
+      <div class="item-title">ביטקוין שובר $100,000 — פריצה היסטורית</div>
+      <p class="item-summary">BlackRock: $1.8B ב-3 ימים. $102,400. Bitcoin הפך asset class — JPMorgan: יעד $120K.</p>
+      <div class="item-meta"><span class="meta-source">CoinDesk</span><span class="meta-sep"></span><span class="meta-time">לפני 7 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.54s"
+      data-cat="Economy"
+      data-title="אגח ארהב 30 שנה — 4.65%, שיא מאז 2010"
+      data-summary="4.65% ל-30 שנה. ביקוש ×2.3 מהיצע. Goldman: 'אמון מוסדי ארוך טווח.' התרגום: השוק לא מאמין שאינפלציה תחזור. לפחות לא בשלושים השנה הבאות."
+      data-source="FT" data-time="לפני 9 שעות">
+      <div class="item-title">אגח ארהב 30 שנה — 4.65%, שיא מאז 2010</div>
+      <p class="item-summary">ביקוש ×2.3 מהיצע. Goldman: "אמון ארוך טווח." תרגום: השוק לא מאמין שאינפלציה תחזור.</p>
+      <div class="item-meta"><span class="meta-source">FT</span><span class="meta-sep"></span><span class="meta-time">לפני 9 שעות</span></div>
+    </div>
+  </div>
+
+  <!-- News -->
+  <div class="col" style="--cc:var(--cat-news)">
+    <div class="cat-head"><span class="cat-label">News</span><div class="cat-line"></div></div>
+
+    <div class="item" style="--d:.28s"
+      data-cat="News"
+      data-title="G7 חותמת: מסגרת רגולציה מחייבת ל-AI"
+      data-summary="G7 יצאה עם framework ל-AI. שקיפות, watermarking, שיתוף אירועי סייבר. אין שיניים עדיין — אבל זה הנייר שממנו יגיע החוק. האיחוד האירופי כבר הכריז על שילוב ב-AI Act."
+      data-source="AP News" data-time="לפני 2 שעות">
+      <div class="item-title">G7 חותמת: מסגרת רגולציה מחייבת ל-AI</div>
+      <p class="item-summary">שקיפות, watermarking, שיתוף סייבר. אין שיניים עדיין — אבל זה הנייר שממנו יגיע החוק.</p>
+      <div class="item-meta"><span class="meta-source">AP News</span><span class="meta-sep"></span><span class="meta-time">לפני 2 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.36s"
+      data-cat="News"
+      data-title="אוקראינה עוצרת חרקוב — סיוע אמריקאי $800M"
+      data-summary="3 גלי תקיפה. עצרו את כולם. $800M נוספים מארה'ב — תחמושת והגנה אווירית. וושינגטון לא בדרך להפסיק לשלם, לפחות לא לפני שינוי ממשל."
+      data-source="BBC World" data-time="לפני 4 שעות">
+      <div class="item-title">אוקראינה עוצרת חרקוב — סיוע אמריקאי $800M</div>
+      <p class="item-summary">3 גלי תקיפה נהדפו. $800M תחמושת והגנה אווירית. וושינגטון לא מפסיקה לשלם.</p>
+      <div class="item-meta"><span class="meta-source">BBC World</span><span class="meta-sep"></span><span class="meta-time">לפני 4 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.44s"
+      data-cat="News"
+      data-title="מקרון עמום לגבי קדנציה שנייה — לה פן ב-34%"
+      data-summary="39% תמיכה, ירידה של 12 נקודות תוך שנה. RN של לה פן ב-34%. מקרון לא אמר 'לא מתמודד' — אולי כי שתיקה עדיפה על תשובה שאין לה."
+      data-source="Le Monde" data-time="לפני 6 שעות">
+      <div class="item-title">מקרון עמום לגבי קדנציה שנייה — לה פן ב-34%</div>
+      <p class="item-summary">39%, ירידה 12 נקודות. לה פן ב-34%. מקרון לא אמר "לא" — אולי כי אין לו תוכנית B.</p>
+      <div class="item-meta"><span class="meta-source">Le Monde</span><span class="meta-sep"></span><span class="meta-time">לפני 6 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.52s"
+      data-cat="News"
+      data-title="רעידת אדמה 6.2 ביפן — ללא נפגעים"
+      data-summary="6.2 בשעה 03:44, 80 ק'מ מטוקיו. אזהרת צונאמי הוצאה ובוטלה ב-38 דקות. אין נפגעים. יפן פועלת כמו שעון על דברים כאלה — שאר העולם לא."
+      data-source="Reuters" data-time="לפני 8 שעות">
+      <div class="item-title">רעידת אדמה 6.2 ביפן — ללא נפגעים</div>
+      <p class="item-summary">03:44, 80 ק'מ מטוקיו. אזהרת צונאמי בוטלה ב-38 דקות. יפן פועלת כמו שעון על דברים כאלה.</p>
+      <div class="item-meta"><span class="meta-source">Reuters</span><span class="meta-sep"></span><span class="meta-time">לפני 8 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.60s"
+      data-cat="News"
+      data-title="סין: 1,200 GW, $345B — התוכנית הגדולה בהיסטוריה"
+      data-summary="$345B, 3.2M משרות, 1.8B טון CO₂ פחות שנתי. אם סין תבצע את זה — זוהי גדולת ה-energy transition בהיסטוריה. אם. הפער בין הכרזה לביצוע הוא המקום שבו מדיניות סינית נוהגת להיכנס."
+      data-source="The Guardian" data-time="לפני 10 שעות">
+      <div class="item-title">סין: 1,200 GW, $345B — התוכנית הגדולה בהיסטוריה</div>
+      <p class="item-summary">$345B, 3.2M משרות, 1.8B טון CO₂ פחות. אם יבצעו — שיא היסטורי. הפרק האמיתי: הפער בין הכרזה לביצוע.</p>
+      <div class="item-meta"><span class="meta-source">The Guardian</span><span class="meta-sep"></span><span class="meta-time">לפני 10 שעות</span></div>
+    </div>
+  </div>
+
+  <!-- Sports -->
+  <div class="col" style="--cc:var(--cat-sport)">
+    <div class="cat-head"><span class="cat-label">Sports</span><div class="cat-line"></div></div>
+
+    <div class="item" style="--d:.34s"
+      data-cat="Sports"
+      data-title="ריאל מדריד 3-0 — גביע ה-15 בליגת האלופות"
+      data-summary="3-0. לא היה מותח. מבלינגהם הבקיע פעמיים, ווינישיוס מפנדל. גביע ה-15. אנצ'לוטי נשאל 'מתי תפרוש?' — ולא ענה בפעם הרביעית."
+      data-source="ESPN" data-time="לפני 1 שעה">
+      <div class="item-title">ריאל מדריד 3-0 — גביע ה-15 בליגת האלופות</div>
+      <p class="item-summary">3-0, לא מותח. מבלינגהם פעמיים, ווינישיוס מפנדל. אנצ'לוטי נשאל 'מתי תפרוש' — ולא ענה שוב.</p>
+      <div class="item-meta"><span class="meta-source">ESPN</span><span class="meta-sep"></span><span class="meta-time">לפני 1 שעה</span></div>
+    </div>
+
+    <div class="item" style="--d:.42s"
+      data-cat="Sports"
+      data-title="ג׳וקוביץ׳: 'אני 100% מוכן' — גביע שמיני בוימבלדון"
+      data-summary="38 שנה, פציעת ברך, Wimbledon. 7 גביעים כבר בכיס. גביע שמיני יהיה שיא שמחזיק לבדו — בחציר, בגיל שאחרים כבר פרשו. גבולות ממשיכים לזוז."
+      data-source="BBC Sport" data-time="לפני 3 שעות">
+      <div class="item-title">ג׳וקוביץ׳: "100% מוכן" — גביע שמיני ושיא עולמי</div>
+      <p class="item-summary">38, פציעת ברך, 7 גביעים. שמיני יהיה שיא שלבדו. בגיל שאחרים פרשו כבר — גבולות ממשיכים לזוז.</p>
+      <div class="item-meta"><span class="meta-source">BBC Sport</span><span class="meta-sep"></span><span class="meta-time">לפני 3 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.50s"
+      data-cat="Sports"
+      data-title="לייקרס $230M — שיא עולמי לשחקן בעמדתו"
+      data-summary="9 בוועידה המערבית, $230M חדש. לייקרס לא בונה בסבלנות — לייקרס מהמרת. חוזה ענק על שחקן שטרם הוכיח שהוא מגיע לפלייאוף. ג'יים בוס ממשיך בשיטה."
+      data-source="Sky Sports" data-time="לפני 5 שעות">
+      <div class="item-title">לייקרס $230M — שיא עולמי לשחקן בעמדתו</div>
+      <p class="item-summary">9 בוועידה, $230M. לייקרס לא בונה — מהמרת. חוזה ענק על שחקן שטרם הוכיח בפלייאוף.</p>
+      <div class="item-meta"><span class="meta-source">Sky Sports</span><span class="meta-sep"></span><span class="meta-time">לפני 5 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.58s"
+      data-cat="Sports"
+      data-title="ישראל לרבע גמר! עזר ב-89 — פורטוגל מחכה"
+      data-summary="נכנס בדקה 65. גול ב-71. הכרעה ב-89. 45,000 אנשים שכחו שישנו. עכשיו פורטוגל — ורונאלדו, שגם הוא לא פורש."
+      data-source="Ynet Sport" data-time="לפני 7 שעות">
+      <div class="item-title">ישראל לרבע גמר! עזר ב-89 — פורטוגל מחכה</div>
+      <p class="item-summary">נכנס ב-65, גול ב-71, הכרעה ב-89. 45,000 שכחו שישנו. פורטוגל ורונאלדו מחכים.</p>
+      <div class="item-meta"><span class="meta-source">Ynet Sport</span><span class="meta-sep"></span><span class="meta-time">לפני 7 שעות</span></div>
+    </div>
+
+    <div class="item" style="--d:.66s"
+      data-cat="Sports"
+      data-title="F1 קנדה: ורשטאפן, +48 — ספרד בשבועיים"
+      data-summary="safety car בדקה 47. ורשטאפן ניצל בדיוק. לקלר שני ב-4.2 שניות — קרוב מדי לנחמה. 48 נקודות יתרון. ורשטאפן בדרך לאליפות רביעית ברציפות, ואף אחד לא עוצר אותו."
+      data-source="F1.com" data-time="לפני 9 שעות">
+      <div class="item-title">F1 קנדה: ורשטאפן, +48 — ספרד בשבועיים</div>
+      <p class="item-summary">Safety car מושלם, לקלר ב-4.2 שניות. 48 נקודות יתרון. ורשטאפן בדרך ל-4 ברציפות — ואף אחד לא עוצר.</p>
+      <div class="item-meta"><span class="meta-source">F1.com</span><span class="meta-sep"></span><span class="meta-time">לפני 9 שעות</span></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- SLIDE PANEL -->
+<div id="overlay"></div>
+<div id="panel">
+  <div class="panel-top">
+    <span id="panel-cat" class="panel-cat"></span>
+    <button class="panel-close" id="panel-close-btn">×</button>
+  </div>
+  <div class="panel-body">
+    <div id="panel-title" class="panel-title"></div>
+    <div class="panel-divider"></div>
+    <p id="panel-summary" class="panel-summary"></p>
+    <div id="panel-meta" class="panel-meta"></div>
+    <a id="panel-cta" class="panel-cta" href="#" target="_blank">
+      פתח מקור מלא &nbsp;↗
+    </a>
+  </div>
+</div>
+
+<script>
+  // progress bar
+  const prog = document.getElementById('prog');
+  window.addEventListener('scroll', () => {
+    const pct = window.scrollY / Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    prog.style.transform = `scaleX(${Math.min(pct, 1)})`;
+  }, { passive: true });
+
+  // slide panel
+  const overlay  = document.getElementById('overlay');
+  const panel    = document.getElementById('panel');
+  const closeBtn = document.getElementById('panel-close-btn');
+
+  const CAT_COLORS = {
+    'AI & Builders': '#A855F7',
+    'Tech':          '#06B6D4',
+    'Economy':       '#10B981',
+    'News':          '#F97316',
+    'Sports':        '#EC4899',
+  };
+
+  function openPanel(el) {
+    const cat   = el.dataset.cat  || '';
+    const color = CAT_COLORS[cat] || '#A855F7';
+
+    document.getElementById('panel-cat').textContent     = cat;
+    document.getElementById('panel-cat').style.color     = color;
+    document.getElementById('panel-title').textContent   = el.dataset.title   || '';
+    document.getElementById('panel-summary').textContent = el.dataset.summary || '';
+    document.getElementById('panel-meta').innerHTML =
+      `<span class="meta-source" style="color:${color}">${el.dataset.source||''}</span>` +
+      `<span class="meta-sep"></span>` +
+      `<span class="meta-time">${el.dataset.time||''}</span>`;
+    const cta = document.getElementById('panel-cta');
+    cta.style.borderColor = color;
+    cta.style.color       = color;
+    cta.style.background  = color + '18';
+    cta.onmouseenter = () => { cta.style.background = color; cta.style.color = '#000'; };
+    cta.onmouseleave = () => { cta.style.background = color + '18'; cta.style.color = color; };
+
+    panel.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePanel() {
+    panel.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('.item').forEach(el => {
+    el.addEventListener('click', () => openPanel(el));
+  });
+
+  closeBtn.addEventListener('click', closePanel);
+  overlay.addEventListener('click', closePanel);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+</script>
+</body>
+</html>

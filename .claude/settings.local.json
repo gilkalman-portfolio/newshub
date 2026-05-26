@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"C:\\\\Users\\\\USER\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\24fb88a8-9c28-49a5-a226-1a44cdc37953\\\\2c86ad3d-2f6d-4ef1-858d-b9115d80d0a1\\\\skills\\\\web-artifacts-builder\\\\scripts\")",
+      "Read(//c/Users/USER/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/24fb88a8-9c28-49a5-a226-1a44cdc37953/2c86ad3d-2f6d-4ef1-858d-b9115d80d0a1/skills/web-artifacts-builder/**)",
+      "Bash(bash scripts/init-artifact.sh newshub-prototype)",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_click",
+      "PowerShell(supabase --version 2>&1)",
+      "PowerShell(npx supabase --version 2>&1)"
+    ]
+  }
+}
