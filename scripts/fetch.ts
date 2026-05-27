@@ -30,7 +30,7 @@ const CONFIG = {
 } as const;
 
 /** Delay between consecutive Gemini API calls to avoid rate-limit errors. */
-const GEMINI_DELAY_MS = 500;
+const GEMINI_DELAY_MS = 250;
 
 // ---------------------------------------------------------------------------
 // Types
