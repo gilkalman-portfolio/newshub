@@ -30,19 +30,23 @@ if (!supabaseUrl) {
       'Add it to your .env.local file.'
   );
 }
-if (!supabaseAnonKey) {
-  throw new Error(
-    'Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY\n' +
-      'Add it to your .env.local file.'
-  );
-}
 
-export const supabase: SupabaseClient = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
-  // Provide ws for Node.js < 22 (no-op in browser where window is defined)
-  NodeWebSocket ? { realtime: { transport: NodeWebSocket } } : {}
-);
+// Anon client — only created when NEXT_PUBLIC_SUPABASE_ANON_KEY is available.
+// Scripts that only use supabaseAdmin (e.g. scripts/fetch.ts) do not need this key.
+export const supabase: SupabaseClient = supabaseAnonKey
+  ? createClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      NodeWebSocket ? { realtime: { transport: NodeWebSocket } } : {}
+    )
+  : (new Proxy({}, {
+      get() {
+        throw new Error(
+          'supabase anon client used but NEXT_PUBLIC_SUPABASE_ANON_KEY is not set.\n' +
+          'Add it to your .env.local file.'
+        );
+      },
+    }) as unknown as SupabaseClient);
 
 // ---------------------------------------------------------------------------
 // 2. Server / admin client (service-role key)
