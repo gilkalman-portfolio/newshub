@@ -21,6 +21,14 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   'sports': 'Sports',
 };
 
+export const CATEGORY_ICONS: Record<Category, string> = {
+  'ai-builders': '🤖',
+  'tech':        '💻',
+  'economy':     '📊',
+  'news':        '📰',
+  'sports':      '⚽',
+};
+
 export const CATEGORY_COLORS: Record<Category, string> = {
   'ai-builders': '#A855F7',
   'tech': '#06B6D4',

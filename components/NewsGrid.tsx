@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Article, Category } from '@/lib/types';
 import { refreshNews } from '@/app/actions';
-import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/lib/types';
+import { CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS } from '@/lib/types';
 import NewsItem from './NewsItem';
 
 interface Props {
@@ -135,8 +135,9 @@ export default function NewsGrid({ articles }: Props) {
         <span className="logo">NewsHUB</span>
         <span className="header-center">{formatHebrewDate(new Date())}</span>
         <div className="header-right">
-          <Link href="/stocks" className="runs-link" title="תיק המניות שלי">
-            📈 מניות
+          <Link href="/stocks" className="refresh-btn" title="תיק המניות שלי">
+            <span className="refresh-icon" style={{ fontSize: 14 }}>📈</span>
+            <span className="refresh-label">מניות</span>
           </Link>
           <button
             className={`refresh-btn${refreshing ? ' refreshing' : ''}`}
@@ -161,6 +162,7 @@ export default function NewsGrid({ articles }: Props) {
           const color = CATEGORY_COLORS[cat];
           const cssVar = CAT_CSS_VAR[cat];
           const label = CATEGORY_LABELS[cat];
+          const icon  = CATEGORY_ICONS[cat];
           const items = articles[cat];
 
           return (
@@ -177,6 +179,7 @@ export default function NewsGrid({ articles }: Props) {
                   style={{ textDecoration: 'none' }}
                   title={`כל כתבות ${label}`}
                 >
+                  <span className="cat-icon">{icon}</span>
                   {label} ›
                 </Link>
                 <div className="cat-line" />
