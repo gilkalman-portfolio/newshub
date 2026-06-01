@@ -135,6 +135,9 @@ export default function NewsGrid({ articles }: Props) {
         <span className="logo">NewsHUB</span>
         <span className="header-center">{formatHebrewDate(new Date())}</span>
         <div className="header-right">
+          <Link href="/stocks" className="runs-link" title="תיק המניות שלי">
+            📈 מניות
+          </Link>
           <button
             className={`refresh-btn${refreshing ? ' refreshing' : ''}`}
             onClick={handleRefresh}
