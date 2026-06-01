@@ -88,33 +88,37 @@ async function fetchNews(ticker: string): Promise<StockNews[]> {
   }
 }
 
+// mode=prices  → only snapshot  (cache 2min)
+// mode=news    → only news      (cache 10min)
+// mode=all     → both           (default, first load)
 export async function GET(req: NextRequest) {
   if (!KEY) {
     return NextResponse.json({ error: 'POLYGON_API_KEY not set' }, { status: 500 });
   }
 
-  const raw = req.nextUrl.searchParams.get('tickers') ?? '';
+  const raw    = req.nextUrl.searchParams.get('tickers') ?? '';
+  const mode   = req.nextUrl.searchParams.get('mode') ?? 'all';
   const tickers = raw
     .split(',')
     .map(t => t.trim().toUpperCase())
     .filter(Boolean)
-    .slice(0, 12); // cap at 12 tickers
+    .slice(0, 12);
 
-  if (!tickers.length) {
-    return NextResponse.json([] as StockData[]);
-  }
+  if (!tickers.length) return NextResponse.json([] as StockData[]);
 
   const results: StockData[] = await Promise.all(
     tickers.map(async (ticker) => {
       const [snapshot, news] = await Promise.all([
-        fetchSnapshot(ticker),
-        fetchNews(ticker),
+        mode !== 'news' ? fetchSnapshot(ticker) : Promise.resolve(null),
+        mode !== 'prices' ? fetchNews(ticker)   : Promise.resolve([]),
       ]);
       return { ticker, snapshot, news };
     })
   );
 
+  // Cache header matches the mode
+  const maxAge = mode === 'news' ? 600 : 120;
   return NextResponse.json(results, {
-    headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=30' },
+    headers: { 'Cache-Control': `s-maxage=${maxAge}, stale-while-revalidate=30` },
   });
 }

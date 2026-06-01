@@ -5,9 +5,10 @@ import Link from 'next/link';
 import type { StockData } from '@/app/api/stocks/route';
 import StockCard from '@/components/StockCard';
 
-const STORAGE_KEY = 'newshub_watchlist';
+const STORAGE_KEY    = 'newshub_watchlist';
 const DEFAULT_TICKERS = ['AAPL', 'NVDA', 'TSLA'];
-const REFRESH_MS = 60_000;
+const PRICE_REFRESH_MS = 2 * 60_000;   // מחיר כל 2 דקות  → 1 קריאה/טיקר/2 דק'
+const NEWS_REFRESH_MS  = 10 * 60_000;  // חדשות כל 10 דקות → 1 קריאה/טיקר/10 דק'
 
 function loadWatchlist(): string[] {
   if (typeof window === 'undefined') return DEFAULT_TICKERS;
@@ -41,20 +42,35 @@ export default function StocksPage() {
     }
   }, [watchlist]);
 
-  const fetchData = useCallback(async (tickers: string[]) => {
+  const fetchData = useCallback(async (tickers: string[], mode: 'all' | 'prices' | 'news' = 'all') => {
     if (!tickers.length) { setData([]); return; }
-    setLoading(true);
+    if (mode === 'all') setLoading(true);
     setError(null);
     try {
-      const res  = await fetch(`/api/stocks?tickers=${tickers.join(',')}`);
+      const res  = await fetch(`/api/stocks?tickers=${tickers.join(',')}&mode=${mode}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'שגיאה בטעינה');
-      setData(json);
+
+      if (mode === 'all') {
+        setData(json);
+      } else if (mode === 'prices') {
+        // Merge only snapshot field
+        setData(prev => prev.map(d => {
+          const updated = json.find((u: any) => u.ticker === d.ticker);
+          return updated ? { ...d, snapshot: updated.snapshot ?? d.snapshot } : d;
+        }));
+      } else if (mode === 'news') {
+        // Merge only news field
+        setData(prev => prev.map(d => {
+          const updated = json.find((u: any) => u.ticker === d.ticker);
+          return updated ? { ...d, news: updated.news?.length ? updated.news : d.news } : d;
+        }));
+      }
       setLastUpdated(new Date());
     } catch (e: any) {
       setError(e.message ?? 'שגיאה לא ידועה');
     } finally {
-      setLoading(false);
+      if (mode === 'all') setLoading(false);
     }
   }, []);
 
@@ -63,11 +79,19 @@ export default function StocksPage() {
     if (watchlist.length > 0) fetchData(watchlist);
   }, [watchlist, fetchData]);
 
-  // Auto-refresh every minute
+  // מחיר כל 2 דקות
   useEffect(() => {
     const id = setInterval(() => {
-      if (watchlist.length > 0) fetchData(watchlist);
-    }, REFRESH_MS);
+      if (watchlist.length > 0) fetchData(watchlist, 'prices');
+    }, PRICE_REFRESH_MS);
+    return () => clearInterval(id);
+  }, [watchlist, fetchData]);
+
+  // חדשות כל 10 דקות
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (watchlist.length > 0) fetchData(watchlist, 'news');
+    }, NEWS_REFRESH_MS);
     return () => clearInterval(id);
   }, [watchlist, fetchData]);
 
@@ -97,7 +121,7 @@ export default function StocksPage() {
         <div className="header-right">
           <button
             className={`refresh-btn${loading ? ' refreshing' : ''}`}
-            onClick={() => fetchData(watchlist)}
+            onClick={() => fetchData(watchlist, 'prices')}
             disabled={loading}
           >
             <span className="refresh-icon">↻</span>
