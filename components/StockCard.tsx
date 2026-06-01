@@ -1,6 +1,7 @@
 'use client';
 
 import type { StockData } from '@/app/api/stocks/route';
+import type { StockTwit } from '@/app/api/twits/route';
 
 function relTime(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -11,10 +12,10 @@ function relTime(iso: string): string {
   return `לפני ${Math.floor(h / 24)} ימים`;
 }
 
-function SentimentDot({ s }: { s?: string }) {
+function SentimentDot({ s }: { s?: string | null }) {
   const color =
-    s === 'positive' ? '#16A34A' :
-    s === 'negative' ? '#DC2626' :
+    s === 'positive' || s === 'Bullish' ? '#16A34A' :
+    s === 'negative' || s === 'Bearish' ? '#DC2626' :
     '#9CA3AF';
   return (
     <span
@@ -31,18 +32,35 @@ function SentimentDot({ s }: { s?: string }) {
   );
 }
 
+function TwitSentimentBadge({ s }: { s: 'Bullish' | 'Bearish' | null }) {
+  if (!s) return null;
+  const isBull = s === 'Bullish';
+  return (
+    <span className={`twit-badge ${isBull ? 'twit-badge-bull' : 'twit-badge-bear'}`}>
+      {isBull ? '🐂 Bullish' : '🐻 Bearish'}
+    </span>
+  );
+}
+
 interface Props {
-  data: StockData;
+  data:  StockData;
+  twits: StockTwit[];
   onRemove: (ticker: string) => void;
 }
 
-export default function StockCard({ data, onRemove }: Props) {
+export default function StockCard({ data, twits, onRemove }: Props) {
   const { ticker, snapshot, news } = data;
   const up   = (snapshot?.changePerc ?? 0) >= 0;
   const pct  = snapshot ? `${up ? '+' : ''}${snapshot.changePerc.toFixed(2)}%` : '—';
   const price = snapshot ? `$${snapshot.price.toFixed(2)}` : '—';
   const changeColor = up ? '#16A34A' : '#DC2626';
   const changeBg    = up ? '#DCFCE7' : '#FEE2E2';
+
+  // StockTwits sentiment summary
+  const bullCount = twits.filter(t => t.sentiment === 'Bullish').length;
+  const bearCount = twits.filter(t => t.sentiment === 'Bearish').length;
+  const totalSentiment = bullCount + bearCount;
+  const bullPct = totalSentiment > 0 ? Math.round((bullCount / totalSentiment) * 100) : null;
 
   return (
     <div className="stock-card">
@@ -54,18 +72,13 @@ export default function StockCard({ data, onRemove }: Props) {
             className="stock-remove-btn"
             onClick={() => onRemove(ticker)}
             title="הסר מניה"
-          >
-            ×
-          </button>
+          >×</button>
         </div>
 
         <div className="stock-price-row">
           <span className="stock-price">{price}</span>
           {snapshot && (
-            <span
-              className="stock-badge"
-              style={{ color: changeColor, background: changeBg }}
-            >
+            <span className="stock-badge" style={{ color: changeColor, background: changeBg }}>
               {pct}
             </span>
           )}
@@ -86,10 +99,9 @@ export default function StockCard({ data, onRemove }: Props) {
       <div className="stock-card-divider" />
 
       {/* News list */}
+      <div className="stock-section-label">📰 חדשות</div>
       <div className="stock-news-list">
-        {news.length === 0 && (
-          <p className="stock-no-news">אין חדשות זמינות</p>
-        )}
+        {news.length === 0 && <p className="stock-no-news">אין חדשות זמינות</p>}
         {news.map((item) => (
           <a
             key={item.id}
@@ -108,6 +120,64 @@ export default function StockCard({ data, onRemove }: Props) {
           </a>
         ))}
       </div>
+
+      {/* StockTwits section */}
+      {twits.length > 0 && (
+        <>
+          <div className="stock-card-divider" />
+          <div className="stock-section-label">
+            💬 StockTwits
+            {bullPct !== null && (
+              <span className="twits-sentiment-bar-label">
+                <span style={{ color: '#16A34A' }}>🐂 {bullPct}%</span>
+                {' · '}
+                <span style={{ color: '#DC2626' }}>🐻 {100 - bullPct}%</span>
+              </span>
+            )}
+          </div>
+
+          {/* Bull/Bear progress bar */}
+          {bullPct !== null && (
+            <div className="twits-sentiment-bar">
+              <div className="twits-bar-bull" style={{ width: `${bullPct}%` }} />
+              <div className="twits-bar-bear" style={{ width: `${100 - bullPct}%` }} />
+            </div>
+          )}
+
+          <div className="stock-twits-list">
+            {twits.map((twit, idx) => (
+              <a
+                key={`${twit.id}-${idx}`}
+                href={twit.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="stock-twit-item"
+              >
+                <div className="twit-header">
+                  <span className="twit-user">@{twit.username}</span>
+                  <span className="twit-time">{relTime(twit.createdAt)}</span>
+                </div>
+                <p className="twit-body">{twit.body}</p>
+                <div className="twit-footer">
+                  <TwitSentimentBadge s={twit.sentiment} />
+                  {twit.priceTarget && (
+                    <span className="twit-price-target">🎯 ${twit.priceTarget}</span>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* StockTwits loading/empty */}
+      {twits.length === 0 && (
+        <>
+          <div className="stock-card-divider" />
+          <div className="stock-section-label">💬 StockTwits</div>
+          <p className="stock-no-news">טוען...</p>
+        </>
+      )}
     </div>
   );
 }
