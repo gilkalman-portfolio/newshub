@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
-import { Rubik, Space_Grotesk, IBM_Plex_Mono } from 'next/font/google';
+import { Inter, Rubik, Space_Grotesk, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 const rubik = Rubik({
   subsets: ['latin', 'hebrew'],
@@ -37,7 +44,7 @@ export default function RootLayout({
     <html
       lang="he"
       dir="rtl"
-      className={`${rubik.variable} ${spaceGrotesk.variable} ${ibmPlexMono.variable}`}
+      className={`${inter.variable} ${rubik.variable} ${spaceGrotesk.variable} ${ibmPlexMono.variable}`}
     >
       <body>{children}</body>
     </html>
