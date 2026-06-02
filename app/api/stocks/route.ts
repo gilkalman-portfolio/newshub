@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Parser from 'rss-parser';
 
 const KEY  = process.env.POLYGON_API_KEY;
 const BASE = 'https://api.polygon.io';
+const rssParser = new Parser({ timeout: 5000 });
 
 export interface StockNews {
   id: string;
@@ -68,10 +70,11 @@ async function fetchSnapshot(ticker: string): Promise<StockSnapshot | null> {
   }
 }
 
-async function fetchNews(ticker: string): Promise<StockNews[]> {
+async function fetchNewsFromPolygon(ticker: string): Promise<StockNews[]> {
   try {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const res = await fetch(
-      `${BASE}/v2/reference/news?ticker=${ticker}&limit=5&order=desc&apiKey=${KEY}`,
+      `${BASE}/v3/reference/news?ticker=${ticker}&limit=5&order=desc&published_utc.gte=${since}&apiKey=${KEY}`,
       { next: { revalidate: 300 } }
     );
     const json = await res.json();
@@ -86,6 +89,33 @@ async function fetchNews(ticker: string): Promise<StockNews[]> {
   } catch {
     return [];
   }
+}
+
+async function fetchNewsFromYahoo(ticker: string): Promise<StockNews[]> {
+  try {
+    const feed = await rssParser.parseURL(
+      `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${ticker}&region=US&lang=en-US`
+    );
+    return (feed.items ?? []).slice(0, 5).map((item, i) => ({
+      id:            `yahoo-${ticker}-${i}`,
+      title:         item.title ?? '',
+      article_url:   item.link ?? '',
+      published_utc: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+      publisher:     { name: 'Yahoo Finance' },
+      sentiment:     'neutral' as const,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchNews(ticker: string): Promise<StockNews[]> {
+  const polygonNews = await fetchNewsFromPolygon(ticker);
+  if (polygonNews.length >= 2) return polygonNews;
+  // Polygon has sparse coverage for this ticker — try Yahoo Finance RSS
+  const yahooNews = await fetchNewsFromYahoo(ticker);
+  if (yahooNews.length > 0) return yahooNews;
+  return polygonNews; // return whatever Polygon had (even if old/empty)
 }
 
 // mode=prices  → only snapshot  (cache 2min)
