@@ -1074,9 +1074,10 @@ header {
   color: #7C3AED;
 }
 .twits-summary-text {
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.75;
+  color: #111827;
   margin: 0;
   direction: rtl;
   text-align: right;
