@@ -174,15 +174,15 @@ export default function StockCard({ data, twits, onRemove }: Props) {
 
           {/* AI Summary button */}
           <button
-            className={`twits-summary-btn${summaryLoading ? ' loading' : ''}`}
+            className={`twits-summary-btn${summaryLoading ? ' loading' : ''}${summaryOpen && summary ? ' open' : ''}`}
             onClick={summaryOpen && summary ? () => setSummaryOpen(o => !o) : fetchSummary}
             disabled={summaryLoading}
           >
             {summaryLoading
-              ? <><span className="twits-summary-spinner" />מסכם...</>
+              ? <><span className="twits-summary-spinner" /><span>Gemini מנתח...</span></>
               : summaryOpen && summary
-                ? '▲ הסתר סיכום'
-                : '✦ סכם את הדיון בעברית'}
+                ? <><span>▲</span><span>הסתר סיכום</span></>
+                : <><span>✦</span><span>סכם את הדיון בעברית</span></>}
           </button>
 
           {/* AI Summary panel */}
@@ -198,7 +198,10 @@ export default function StockCard({ data, twits, onRemove }: Props) {
                 <div className="twits-summary-error">⚠ {summaryError}</div>
               )}
               {summary && !summaryLoading && (
-                <p className="twits-summary-text">{summary}</p>
+                <>
+                  <div className="twits-summary-label">✦ סיכום AI</div>
+                  <p className="twits-summary-text">{summary}</p>
+                </>
               )}
             </div>
           )}

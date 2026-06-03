@@ -1007,39 +1007,45 @@ header {
 .twits-summary-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin: 8px 0 4px;
-  padding: 5px 10px;
-  font-size: 11px;
-  font-weight: 500;
-  color: #7C3AED;
-  background: #F5F3FF;
-  border: 1px solid #DDD6FE;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-  width: 100%;
   justify-content: center;
+  gap: 6px;
+  margin: 10px 0 6px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 1px 4px rgba(109,40,217,0.25);
+  transition: opacity 0.15s, box-shadow 0.15s;
+  letter-spacing: 0.01em;
 }
 .twits-summary-btn:hover:not(:disabled) {
-  background: #EDE9FE;
-  border-color: #C4B5FD;
+  opacity: 0.9;
+  box-shadow: 0 2px 8px rgba(109,40,217,0.35);
 }
 .twits-summary-btn:disabled {
   cursor: default;
-  opacity: 0.7;
+  opacity: 0.65;
 }
-.twits-summary-btn.loading {
-  color: #9CA3AF;
+.twits-summary-btn.open {
+  background: #EDE9FE;
+  color: #6D28D9;
+  box-shadow: none;
+  border: 1px solid #C4B5FD;
+  font-weight: 500;
 }
 
 /* Spinner */
 .twits-summary-spinner {
   display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 2px solid #DDD6FE;
-  border-top-color: #7C3AED;
+  width: 11px;
+  height: 11px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
   border-radius: 50%;
   animation: spin 700ms linear infinite;
   flex-shrink: 0;
@@ -1048,30 +1054,44 @@ header {
   width: 16px;
   height: 16px;
   border-width: 2.5px;
+  border-color: #DDD6FE;
+  border-top-color: #7C3AED;
 }
 
 /* Summary panel */
 .twits-summary-panel {
-  background: #FAFAF9;
-  border: 1px solid #E5E7EB;
+  background: linear-gradient(135deg, #F5F3FF 0%, #FAF5FF 100%);
+  border: 1px solid #DDD6FE;
   border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
 }
 .twits-summary-loading {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--text-muted);
+  color: #7C3AED;
 }
 .twits-summary-text {
   font-size: 13px;
-  line-height: 1.65;
+  line-height: 1.7;
   color: var(--text);
   margin: 0;
   direction: rtl;
   text-align: right;
+}
+.twits-summary-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #7C3AED;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  direction: rtl;
 }
 .twits-summary-error {
   font-size: 12px;
