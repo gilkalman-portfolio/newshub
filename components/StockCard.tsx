@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type { StockData } from '@/app/api/stocks/route';
 import type { StockTwit } from '@/app/api/twits/route';
 
@@ -61,6 +62,33 @@ export default function StockCard({ data, twits, onRemove }: Props) {
   const bearCount = twits.filter(t => t.sentiment === 'Bearish').length;
   const totalSentiment = bullCount + bearCount;
   const bullPct = totalSentiment > 0 ? Math.round((bullCount / totalSentiment) * 100) : null;
+
+  // AI Summary state
+  const [summary, setSummary]           = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [summaryOpen, setSummaryOpen]   = useState(false);
+
+  async function fetchSummary() {
+    if (summaryLoading) return;
+    setSummaryLoading(true);
+    setSummaryError(null);
+    setSummaryOpen(true);
+    try {
+      const res = await fetch('/api/twits-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker, twits }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'שגיאה בסיכום');
+      setSummary(json.summary_he);
+    } catch (e: any) {
+      setSummaryError(e.message ?? 'שגיאה');
+    } finally {
+      setSummaryLoading(false);
+    }
+  }
 
   return (
     <div className="stock-card">
@@ -141,6 +169,37 @@ export default function StockCard({ data, twits, onRemove }: Props) {
             <div className="twits-sentiment-bar">
               <div className="twits-bar-bull" style={{ width: `${bullPct}%` }} />
               <div className="twits-bar-bear" style={{ width: `${100 - bullPct}%` }} />
+            </div>
+          )}
+
+          {/* AI Summary button */}
+          <button
+            className={`twits-summary-btn${summaryLoading ? ' loading' : ''}`}
+            onClick={summaryOpen && summary ? () => setSummaryOpen(o => !o) : fetchSummary}
+            disabled={summaryLoading}
+          >
+            {summaryLoading
+              ? <><span className="twits-summary-spinner" />מסכם...</>
+              : summaryOpen && summary
+                ? '▲ הסתר סיכום'
+                : '✦ סכם את הדיון בעברית'}
+          </button>
+
+          {/* AI Summary panel */}
+          {summaryOpen && (
+            <div className="twits-summary-panel">
+              {summaryLoading && (
+                <div className="twits-summary-loading">
+                  <span className="twits-summary-spinner large" />
+                  <span>Gemini מנתח את הדיון...</span>
+                </div>
+              )}
+              {summaryError && !summaryLoading && (
+                <div className="twits-summary-error">⚠ {summaryError}</div>
+              )}
+              {summary && !summaryLoading && (
+                <p className="twits-summary-text">{summary}</p>
+              )}
             </div>
           )}
 

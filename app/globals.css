@@ -1002,3 +1002,78 @@ header {
   font-size: 10px;
   color: var(--text-muted);
 }
+
+/* ── AI Twits Summary ──────────────────────────────────────── */
+.twits-summary-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 0 4px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #7C3AED;
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  width: 100%;
+  justify-content: center;
+}
+.twits-summary-btn:hover:not(:disabled) {
+  background: #EDE9FE;
+  border-color: #C4B5FD;
+}
+.twits-summary-btn:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+.twits-summary-btn.loading {
+  color: #9CA3AF;
+}
+
+/* Spinner */
+.twits-summary-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #DDD6FE;
+  border-top-color: #7C3AED;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+  flex-shrink: 0;
+}
+.twits-summary-spinner.large {
+  width: 16px;
+  height: 16px;
+  border-width: 2.5px;
+}
+
+/* Summary panel */
+.twits-summary-panel {
+  background: #FAFAF9;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.twits-summary-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.twits-summary-text {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text);
+  margin: 0;
+  direction: rtl;
+  text-align: right;
+}
+.twits-summary-error {
+  font-size: 12px;
+  color: #DC2626;
+}
