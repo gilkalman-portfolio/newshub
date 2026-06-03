@@ -162,6 +162,16 @@ header {
 .refresh-label {
   font-size: 10px;
 }
+.refresh-btn.refresh-ok {
+  border-color: #16a34a;
+  color: #16a34a;
+  background: #f0fdf4;
+}
+.refresh-btn.refresh-err {
+  border-color: #dc2626;
+  color: #dc2626;
+  background: #fef2f2;
+}
 
 .runs-link {
   font-family: var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace;

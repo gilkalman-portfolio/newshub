@@ -31,6 +31,8 @@ export default function StocksPage() {
   const [twitsMap, setTwitsMap]       = useState<Record<string, StockTwit[]>>({});
   const [twitsLoading, setTwitsLoading] = useState(false);
   const [loading, setLoading]         = useState(false);
+  const [refreshing, setRefreshing]   = useState(false);
+  const [refreshStatus, setRefreshStatus] = useState<'idle' | 'ok' | 'err'>('idle');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError]             = useState<string | null>(null);
 
@@ -41,8 +43,8 @@ export default function StocksPage() {
   }, [watchlist]);
 
   // ── Stocks (price + news) ─────────────────────────────────
-  const fetchData = useCallback(async (tickers: string[], mode: 'all' | 'prices' | 'news' = 'all') => {
-    if (!tickers.length) { setData([]); return; }
+  const fetchData = useCallback(async (tickers: string[], mode: 'all' | 'prices' | 'news' = 'all'): Promise<boolean> => {
+    if (!tickers.length) { setData([]); return true; }
     if (mode === 'all') setLoading(true);
     setError(null);
     try {
@@ -63,8 +65,10 @@ export default function StocksPage() {
         }));
       }
       setLastUpdated(new Date());
+      return true;
     } catch (e: any) {
       setError(e.message ?? 'שגיאה לא ידועה');
+      return false;
     } finally {
       if (mode === 'all') setLoading(false);
     }
@@ -113,6 +117,16 @@ export default function StocksPage() {
     return () => clearInterval(id);
   }, [watchlist, fetchTwits]);
 
+  async function manualRefresh() {
+    if (refreshing || !watchlist.length) return;
+    setRefreshing(true);
+    setRefreshStatus('idle');
+    const ok = await fetchData(watchlist, 'prices');
+    setRefreshing(false);
+    setRefreshStatus(ok ? 'ok' : 'err');
+    setTimeout(() => setRefreshStatus('idle'), 2000);
+  }
+
   function addTicker() {
     const t = input.trim().toUpperCase();
     if (!t || watchlist.includes(t)) { setInput(''); return; }
@@ -142,12 +156,16 @@ export default function StocksPage() {
             </span>
           )}
           <button
-            className={`refresh-btn${loading ? ' refreshing' : ''}`}
-            onClick={() => fetchData(watchlist, 'prices')}
-            disabled={loading}
+            className={`refresh-btn${refreshing ? ' refreshing' : ''}${refreshStatus === 'ok' ? ' refresh-ok' : ''}${refreshStatus === 'err' ? ' refresh-err' : ''}`}
+            onClick={manualRefresh}
+            disabled={refreshing || loading}
           >
-            <span className="refresh-icon">↻</span>
-            <span className="refresh-label">{loading ? 'טוען...' : 'רענן'}</span>
+            <span className="refresh-icon">
+              {refreshStatus === 'ok' ? '✓' : refreshStatus === 'err' ? '✗' : '↻'}
+            </span>
+            <span className="refresh-label">
+              {refreshing ? 'טוען...' : refreshStatus === 'ok' ? 'עודכן' : refreshStatus === 'err' ? 'שגיאה' : 'רענן'}
+            </span>
           </button>
           {lastUpdated && (
             <span className="status-txt" style={{ fontSize: 10 }}>
