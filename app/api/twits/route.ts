@@ -42,8 +42,8 @@ export async function GET(req: NextRequest) {
           symbols:     tickers,
           maxMessages: 8,
         }),
-        // Cache for 24h server-side — avoids repeated Apify calls
-        next: { revalidate: 86400 },
+        // Cache for 1h server-side — balance between freshness and Apify cost
+        next: { revalidate: 3600 },
       }
     );
 
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json(results, {
-      headers: { 'Cache-Control': 's-maxage=86400, stale-while-revalidate=3600' },
+      headers: { 'Cache-Control': 's-maxage=3600, stale-while-revalidate=300' },
     });
 
   } catch (err: any) {
