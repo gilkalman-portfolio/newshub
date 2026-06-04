@@ -58,10 +58,11 @@ export default function StockCard({ data, twits, onRemove }: Props) {
   const changeBg    = up ? '#DCFCE7' : '#FEE2E2';
 
   // StockTwits sentiment summary
+  // Require at least 3 explicitly tagged posts — otherwise the bar is statistically misleading
   const bullCount = twits.filter(t => t.sentiment === 'Bullish').length;
   const bearCount = twits.filter(t => t.sentiment === 'Bearish').length;
   const totalSentiment = bullCount + bearCount;
-  const bullPct = totalSentiment > 0 ? Math.round((bullCount / totalSentiment) * 100) : null;
+  const bullPct = totalSentiment >= 3 ? Math.round((bullCount / totalSentiment) * 100) : null;
 
   // AI Summary state
   const [summary, setSummary]           = useState<string | null>(null);
@@ -162,9 +163,14 @@ export default function StockCard({ data, twits, onRemove }: Props) {
                 <span style={{ color: '#DC2626' }}>🐻 {100 - bullPct}%</span>
               </span>
             )}
+            {bullPct === null && totalSentiment > 0 && (
+              <span className="twits-sentiment-bar-label" style={{ color: '#9CA3AF' }}>
+                ({totalSentiment} תגיות — אין מספיק לבר)
+              </span>
+            )}
           </div>
 
-          {/* Bull/Bear progress bar */}
+          {/* Bull/Bear progress bar — only when ≥3 tagged posts */}
           {bullPct !== null && (
             <div className="twits-sentiment-bar">
               <div className="twits-bar-bull" style={{ width: `${bullPct}%` }} />
