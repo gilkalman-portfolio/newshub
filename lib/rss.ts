@@ -30,167 +30,221 @@ export interface FeedItem {
 // ---------------------------------------------------------------------------
 
 export const RSS_SOURCES: RssSource[] = [
-  // ── AI & Builders ────────────────────────────────────────────────────────
+  // ── AI & Builders — עולם ─────────────────────────────────────────────────
   {
     url: 'https://techcrunch.com/category/artificial-intelligence/feed/',
     name: 'TechCrunch AI',
     category: 'ai-builders',
+    region: 'world',
   },
   {
     url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml',
     name: 'The Verge AI',
     category: 'ai-builders',
+    region: 'world',
   },
   {
     url: 'https://hnrss.org/frontpage',
     name: 'Hacker News',
     category: 'ai-builders',
+    region: 'world',
   },
   {
     url: 'https://venturebeat.com/category/ai/feed/',
     name: 'VentureBeat AI',
     category: 'ai-builders',
+    region: 'world',
   },
   {
     url: 'https://feeds.arstechnica.com/arstechnica/index',
     name: 'Ars Technica',
     category: 'ai-builders',
+    region: 'world',
   },
   {
     url: 'https://www.producthunt.com/feed',
     name: 'Product Hunt',
     category: 'ai-builders',
+    region: 'world',
   },
   {
     url: 'http://stratechery.com/feed/',
     name: 'Stratechery',
     category: 'ai-builders',
+    region: 'world',
   },
   {
     url: 'https://www.blog.google/rss/',
     name: 'Google Blog',
     category: 'ai-builders',
+    region: 'world',
   },
   {
     url: 'http://www.aaronsw.com/2002/feeds/pgessays.rss',
     name: 'Paul Graham',
     category: 'ai-builders',
+    region: 'world',
   },
   {
     url: 'https://www.inc.com/rss/',
     name: 'Inc.com',
     category: 'ai-builders',
+    region: 'world',
+  },
+  // ── AI & Builders — ישראל ────────────────────────────────────────────────
+  {
+    url: 'https://www.geektime.co.il/feed/',
+    name: 'Geektime',
+    category: 'ai-builders',
+    region: 'israel',
+  },
+  {
+    url: 'https://nocamels.com/feed/',
+    name: 'NoCamels',
+    category: 'ai-builders',
+    region: 'israel',
   },
 
-  // ── Tech ─────────────────────────────────────────────────────────────────
+  // ── Tech — ישראל ─────────────────────────────────────────────────────────
+  {
+    url: 'https://www.techtime.co.il/feed/',
+    name: 'Techtime',
+    category: 'tech',
+    region: 'israel',
+  },
+
+  // ── Tech — עולם ──────────────────────────────────────────────────────────
   {
     url: 'https://www.theverge.com/rss/index.xml',
     name: 'The Verge',
     category: 'tech',
+    region: 'world',
   },
   {
     url: 'https://9to5mac.com/feed/',
     name: '9to5Mac',
     category: 'tech',
+    region: 'world',
   },
   {
     url: 'https://www.androidauthority.com/feed/',
     name: 'Android Authority',
     category: 'tech',
+    region: 'world',
   },
   {
     url: 'https://www.engadget.com/rss.xml',
     name: 'Engadget',
     category: 'tech',
+    region: 'world',
   },
   {
     url: 'https://www.wired.com/feed/rss',
     name: 'Wired',
     category: 'tech',
+    region: 'world',
   },
   {
     url: 'https://www.cnet.com/rss/news/',
     name: 'CNET',
     category: 'tech',
+    region: 'world',
   },
   {
     url: 'https://gizmodo.com/rss',
     name: 'Gizmodo',
     category: 'tech',
+    region: 'world',
   },
   {
     url: 'https://thenextweb.com/feed/',
     name: 'The Next Web',
     category: 'tech',
+    region: 'world',
   },
 
-  // ── Economy ──────────────────────────────────────────────────────────────
+  // ── Economy — ישראל ──────────────────────────────────────────────────────
+  {
+    url: 'https://www.jpost.com/tags/israel-economy/rss',
+    name: 'JPost Economy',
+    category: 'economy',
+    region: 'israel',
+  },
+
+  // ── Economy — עולם ───────────────────────────────────────────────────────
   {
     url: 'https://feeds.bbci.co.uk/news/business/rss.xml',
     name: 'BBC Business',
     category: 'economy',
+    region: 'world',
   },
   {
     url: 'https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml',
     name: 'NYT Economy',
     category: 'economy',
-  },
-  {
-    url: 'https://feeds.reuters.com/reuters/businessNews',
-    name: 'Reuters Business',
-    category: 'economy',
+    region: 'world',
   },
   {
     url: 'https://www.ft.com/rss/home',
     name: 'Financial Times',
     category: 'economy',
+    region: 'world',
   },
   {
     url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664',
     name: 'CNBC Markets',
     category: 'economy',
-  },
-  {
-    url: 'https://finance.yahoo.com/news/rssindex',
-    name: 'Yahoo Finance',
-    category: 'economy',
+    region: 'world',
   },
   {
     url: 'https://fortune.com/feed',
     name: 'Fortune',
     category: 'economy',
+    region: 'world',
   },
   {
     url: 'https://www.forbes.com/business/feed/',
     name: 'Forbes Business',
     category: 'economy',
+    region: 'world',
   },
   {
     url: 'https://seekingalpha.com/market_currents.xml',
     name: 'Seeking Alpha',
     category: 'economy',
+    region: 'world',
   },
   {
     url: 'https://www.investing.com/rss/news.rss',
     name: 'Investing.com',
     category: 'economy',
+    region: 'world',
   },
 
-  // ── News — ישראל תמיד ראשון ──────────────────────────────────────────────
+  // ── News — ישראל ─────────────────────────────────────────────────────────
   {
     url: 'https://www.ynet.co.il/Integration/StoryRss2.xml',
     name: 'Ynet',
     category: 'news',
+    region: 'israel',
   },
   {
     url: 'https://www.timesofisrael.com/feed/',
     name: 'Times of Israel',
     category: 'news',
+    region: 'israel',
   },
   {
     url: 'https://www.jpost.com/rss/rssfeedsheadlines.aspx',
     name: 'Jerusalem Post',
     category: 'news',
+    region: 'israel',
+  },
+  {
+    url: 'https://www.israelhayom.com/feed/',
+    name: 'Israel Hayom',
+    category: 'news',
+    region: 'israel',
   },
 
   // ── News — עולם ──────────────────────────────────────────────────────────
@@ -198,63 +252,51 @@ export const RSS_SOURCES: RssSource[] = [
     url: 'https://feeds.bbci.co.uk/news/world/rss.xml',
     name: 'BBC World',
     category: 'news',
-  },
-  {
-    url: 'https://feeds.reuters.com/reuters/topNews',
-    name: 'Reuters',
-    category: 'news',
+    region: 'world',
   },
   {
     url: 'https://www.theguardian.com/world/rss',
     name: 'The Guardian',
     category: 'news',
+    region: 'world',
   },
   {
     url: 'https://feeds.npr.org/1001/rss.xml',
     name: 'NPR News',
     category: 'news',
-  },
-  {
-    url: 'https://apnews.com/rss',
-    name: 'AP News',
-    category: 'news',
+    region: 'world',
   },
   {
     url: 'http://rss.cnn.com/rss/edition_world.rss',
     name: 'CNN World',
     category: 'news',
+    region: 'world',
   },
   {
     url: 'https://news.google.com/rss',
     name: 'Google News',
     category: 'news',
+    region: 'world',
   },
   {
-    url: 'http://feeds.washingtonpost.com/rss/world',
-    name: 'Washington Post',
+    url: 'https://www.aljazeera.com/xml/rss/all.xml',
+    name: 'Al Jazeera',
     category: 'news',
-  },
-  {
-    url: 'https://www.yahoo.com/news/rss',
-    name: 'Yahoo News',
-    category: 'news',
+    region: 'world',
   },
 
-  // ── Sports — ישראל תמיד ראשון ────────────────────────────────────────────
-  {
-    url: 'https://www.sport5.co.il/rss.aspx',
-    name: 'Sport5',
-    category: 'sports',
-  },
-  {
-    url: 'https://www.one.co.il/rss/',
-    name: 'ONE Sport',
-    category: 'sports',
-  },
+  // ── Sports — ישראל ───────────────────────────────────────────────────────
   {
     url: 'https://www.ynet.co.il/Integration/StoryRss2.xml',
     name: 'Ynet Sport',
     category: 'sports',
+    region: 'israel',
+  },
+  {
+    url: 'https://sport1.maariv.co.il/feed/',
+    name: 'Sport1',
+    category: 'sports',
+    region: 'israel',
   },
 
   // ── Sports — עולם ────────────────────────────────────────────────────────
@@ -262,26 +304,25 @@ export const RSS_SOURCES: RssSource[] = [
     url: 'https://www.espn.com/espn/rss/news',
     name: 'ESPN',
     category: 'sports',
+    region: 'world',
   },
   {
     url: 'https://www.skysports.com/rss/12040',
     name: 'Sky Sports',
     category: 'sports',
+    region: 'world',
   },
   {
     url: 'https://feeds.bbci.co.uk/sport/rss.xml',
     name: 'BBC Sport',
     category: 'sports',
+    region: 'world',
   },
   {
     url: 'https://sports.yahoo.com/rss/',
     name: 'Yahoo Sports',
     category: 'sports',
-  },
-  {
-    url: 'https://www.sportskeeda.com/feed',
-    name: 'Sportskeeda',
-    category: 'sports',
+    region: 'world',
   },
 ];
 

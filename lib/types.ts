@@ -1,4 +1,5 @@
 export type Category = 'ai-builders' | 'tech' | 'economy' | 'news' | 'sports';
+export type Region = 'israel' | 'world';
 
 export interface Article {
   id: string;
@@ -42,4 +43,5 @@ export interface RssSource {
   url: string;
   name: string;
   category: Category;
+  region: Region;
 }

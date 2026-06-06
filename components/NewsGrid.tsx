@@ -1,12 +1,28 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Article, Category } from '@/lib/types';
 import { refreshNews } from '@/app/actions';
 import { CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS } from '@/lib/types';
 import NewsItem from './NewsItem';
+
+type RegionFilter = 'all' | 'israel' | 'world';
+
+// Source names that belong to Israel — derived from lib/rss.ts region tags
+const ISRAEL_SOURCES = new Set([
+  'Ynet', 'Ynet Sport', 'Sport1',
+  'Times of Israel', 'Jerusalem Post', 'Israel Hayom',
+  'JPost Economy',
+  'Geektime', 'NoCamels', 'Techtime',
+]);
+
+const REGION_TABS: { id: RegionFilter; label: string }[] = [
+  { id: 'all',    label: 'הכל'   },
+  { id: 'israel', label: 'ישראל' },
+  { id: 'world',  label: 'עולם'  },
+];
 
 interface Props {
   articles: Record<Category, Article[]>;
@@ -67,6 +83,12 @@ export default function NewsGrid({ articles }: Props) {
   const [scrollPct, setScrollPct] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
+  const [regionFilter, setRegionFilter] = useState<RegionFilter>('all');
+
+  // Sliding pill refs
+  const switcherRef = useRef<HTMLDivElement>(null);
+  const pillRef = useRef<HTMLDivElement>(null);
+  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const handleRefresh = useCallback(async () => {
     if (refreshing) return;
@@ -99,6 +121,43 @@ export default function NewsGrid({ articles }: Props) {
     return () => document.removeEventListener('keydown', handler);
   }, [closePanel]);
 
+  // Animate sliding pill — runs on mount (no transition) and on every change (with transition)
+  useEffect(() => {
+    const idx = REGION_TABS.findIndex((t) => t.id === regionFilter);
+    const btn = btnRefs.current[idx];
+    const pill = pillRef.current;
+    const switcher = switcherRef.current;
+    if (!btn || !pill || !switcher) return;
+    const sr = switcher.getBoundingClientRect();
+    const br = btn.getBoundingClientRect();
+    pill.style.left = `${br.left - sr.left}px`;
+    pill.style.width = `${br.width}px`;
+  }, [regionFilter]);
+
+  // Suppress transition on first paint so pill doesn't animate from left:0
+  useEffect(() => {
+    const pill = pillRef.current;
+    if (!pill) return;
+    pill.style.transition = 'none';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        pill.style.transition = '';
+      });
+    });
+  }, []);
+
+  // Filter articles by region
+  const filteredArticles = useCallback(
+    (cat: Category): Article[] => {
+      if (regionFilter === 'all') return articles[cat];
+      const isIsrael = regionFilter === 'israel';
+      return articles[cat].filter((a) =>
+        isIsrael ? ISRAEL_SOURCES.has(a.source) : !ISRAEL_SOURCES.has(a.source)
+      );
+    },
+    [articles, regionFilter]
+  );
+
   // Progress bar scroll tracking
   useEffect(() => {
     const handler = () => {
@@ -117,7 +176,7 @@ export default function NewsGrid({ articles }: Props) {
     : 'var(--neon)';
 
   const totalArticles = COLUMN_ORDER.reduce(
-    (sum, cat) => sum + articles[cat].length,
+    (sum, cat) => sum + filteredArticles(cat).length,
     0
   );
 
@@ -156,6 +215,23 @@ export default function NewsGrid({ articles }: Props) {
         </div>
       </header>
 
+      {/* Region filter bar */}
+      <nav className="region-nav" aria-label="סינון לפי אזור">
+        <div className="region-switcher" ref={switcherRef}>
+          <div className="region-pill" ref={pillRef} aria-hidden="true" />
+          {REGION_TABS.map(({ id, label }, idx) => (
+            <button
+              key={id}
+              ref={(el) => { btnRefs.current[idx] = el; }}
+              className={`region-btn${regionFilter === id ? ' active' : ''}`}
+              onClick={() => setRegionFilter(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
       {/* 5-column grid */}
       <main className="grid">
         {COLUMN_ORDER.map((cat, colIdx) => {
@@ -163,7 +239,7 @@ export default function NewsGrid({ articles }: Props) {
           const cssVar = CAT_CSS_VAR[cat];
           const label = CATEGORY_LABELS[cat];
           const icon  = CATEGORY_ICONS[cat];
-          const items = articles[cat];
+          const items = filteredArticles(cat);
 
           return (
             <div
