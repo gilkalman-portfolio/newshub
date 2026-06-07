@@ -29,8 +29,8 @@ const CONFIG = {
   maxPerCategory: 40,     // store up to 40 articles per category per run
 } as const;
 
-/** Delay between consecutive Gemini API calls to avoid rate-limit errors. */
-const GEMINI_DELAY_MS = 250;
+/** Max concurrent Gemini API calls (balance between speed and rate limits). */
+const GEMINI_CONCURRENCY = 8;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,9 +57,12 @@ interface ArticleRow {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Sleep for `ms` milliseconds. */
-const sleep = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+/** Split an array into chunks of size `n`. */
+function chunk<T>(arr: T[], n: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+  return out;
+}
 
 /**
  * Check which URLs from a given list already exist in the `articles` table.
@@ -205,52 +208,45 @@ async function main(): Promise<void> {
   let insertedCount = 0;
   const fetchedAt = new Date().toISOString();
 
-  for (let i = 0; i < newCandidates.length; i++) {
-    const { source, item } = newCandidates[i];
+  // Process in batches — GEMINI_CONCURRENCY items run in parallel per batch,
+  // batches run sequentially to respect rate limits.
+  const batches = chunk(newCandidates, GEMINI_CONCURRENCY);
 
-    console.log(
-      `[fetch] Processing ${i + 1}/${newCandidates.length}: "${item.title.slice(0, 70)}"`
+  for (const [batchIdx, batch] of batches.entries()) {
+    const batchResults = await Promise.allSettled(
+      batch.map(async ({ source, item }, itemIdx) => {
+        const globalIdx = batchIdx * GEMINI_CONCURRENCY + itemIdx + 1;
+        console.log(
+          `[fetch] Processing ${globalIdx}/${newCandidates.length}: "${item.title.slice(0, 70)}"`
+        );
+
+        const { title_he, summary_he } = await summarizeArticle(
+          item.title,
+          item.content,
+          source.name
+        );
+
+        const row: ArticleRow = {
+          title: item.title,
+          title_he,
+          summary_he,
+          url: item.url,
+          source: source.name,
+          category: source.category,
+          published_at: item.publishedAt ? item.publishedAt.toISOString() : null,
+          fetched_at: fetchedAt,
+          image_url: item.imageUrl,
+        };
+
+        const success = await insertArticle(row);
+        if (success) console.log(`[fetch]   ✓ Inserted: "${title_he}"`);
+        return success;
+      })
     );
 
-    try {
-      // Summarise via Gemini (includes its own retry logic)
-      const { title_he, summary_he } = await summarizeArticle(
-        item.title,
-        item.content,
-        source.name
-      );
-
-      // Build the database row
-      const row: ArticleRow = {
-        title: item.title,
-        title_he,
-        summary_he,
-        url: item.url,
-        source: source.name,
-        category: source.category,
-        published_at: item.publishedAt ? item.publishedAt.toISOString() : null,
-        fetched_at: fetchedAt,
-        image_url: item.imageUrl,
-      };
-
-      const success = await insertArticle(row);
-
-      if (success) {
-        insertedCount++;
-        console.log(`[fetch]   ✓ Inserted: "${title_he}"`);
-      }
-    } catch (err) {
-      // Catch any unexpected error so one bad article doesn't halt the run
-      console.error(
-        `[fetch]   ✗ Unexpected error for "${item.title.slice(0, 50)}…":`,
-        err
-      );
-    }
-
-    // Rate-limit guard between Gemini calls (skip delay after the last item)
-    if (i < newCandidates.length - 1) {
-      await sleep(GEMINI_DELAY_MS);
-    }
+    insertedCount += batchResults.filter(
+      (r) => r.status === 'fulfilled' && r.value === true
+    ).length;
   }
 
   // ── Step 5: Prune old articles ────────────────────────────────────────────
