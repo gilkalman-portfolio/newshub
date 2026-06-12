@@ -33,6 +33,13 @@ export interface HebrewSummary {
   summary_he: string;
 }
 
+export interface BatchInput {
+  id: number;
+  title: string;
+  content: string;
+  source: string;
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
@@ -152,4 +159,137 @@ export async function summarizeArticle(
   }
 
   return { title_he: title, summary_he: 'לא ניתן היה לסכם את הכתבה.' };
+}
+
+// ---------------------------------------------------------------------------
+// Batch API
+// ---------------------------------------------------------------------------
+
+function buildBatchPrompt(articles: BatchInput[]): string {
+  const list = articles
+    .map(
+      (a) =>
+        `[${a.id}] כותרת: ${a.title}\nמקור: ${a.source}\nתוכן: ${a.content.slice(0, 400)}`
+    )
+    .join('\n\n');
+
+  return `אתה עורך חדשות ישראלי עם קול חד וישיר. תרגם וסכם כל כתבה לעברית.
+
+${list}
+
+החזר JSON בפורמט הבא בלבד:
+{
+  "results": [
+    { "id": <מספר>, "title_he": "<תרגום קצר עד 10 מילים>", "summary_he": "<סיכום 2-3 משפטים בקול עיתונאי>" }
+  ]
+}
+
+חובה להחזיר תוצאה לכל ID. כתוב בקול עיתונאי — ישיר, פעיל, עם זווית.`;
+}
+
+function parseBatchResponse(
+  raw: string,
+  expectedIds: number[]
+): { results: Map<number, HebrewSummary>; missingIds: number[] } {
+  const results = new Map<number, HebrewSummary>();
+
+  try {
+    const cleaned = raw
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/, '')
+      .trim();
+
+    const parsed = JSON.parse(cleaned) as {
+      results?: Array<{ id?: number; title_he?: string; summary_he?: string }>;
+    };
+
+    if (!Array.isArray(parsed.results)) {
+      throw new Error('Response missing "results" array');
+    }
+
+    for (const item of parsed.results) {
+      if (
+        typeof item.id === 'number' &&
+        typeof item.title_he === 'string' &&
+        typeof item.summary_he === 'string' &&
+        item.title_he.trim() &&
+        item.summary_he.trim()
+      ) {
+        results.set(item.id, {
+          title_he: item.title_he.trim(),
+          summary_he: item.summary_he.trim(),
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[gemini] Batch parse failed:', err);
+  }
+
+  const missingIds = expectedIds.filter((id) => !results.has(id));
+  return { results, missingIds };
+}
+
+/**
+ * Summarise a batch of articles in a single LLM call.
+ * Returns a Map of id → HebrewSummary for successful items,
+ * and a Map of id → reason string for failed items.
+ */
+export async function summarizeBatch(
+  articles: BatchInput[],
+  attempt: number
+): Promise<{ results: Map<number, HebrewSummary>; failReasons: Map<number, string> }> {
+  const failReasons = new Map<number, string>();
+
+  if (articles.length === 0) return { results: new Map(), failReasons };
+
+  const expectedIds = articles.map((a) => a.id);
+  const prompt = buildBatchPrompt(articles);
+
+  try {
+    console.log(
+      `[gemini] Batch attempt ${attempt}: ${articles.length} articles (ids: ${expectedIds.join(', ')})`
+    );
+
+    const response = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://newshub.vercel.app',
+        'X-Title': 'NewsHUB',
+      },
+      body: JSON.stringify({
+        model: MODEL_ID,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.4,
+        max_tokens: Math.min(300 * articles.length, 8192),
+        response_format: { type: 'json_object' },
+      }),
+      signal: AbortSignal.timeout(90_000),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      const reason = `HTTP ${response.status}: ${errText.slice(0, 120)}`;
+      expectedIds.forEach((id) => failReasons.set(id, reason));
+      return { results: new Map(), failReasons };
+    }
+
+    const data = (await response.json()) as {
+      choices: Array<{ message: { content: string } }>;
+    };
+    const raw = data.choices[0]?.message?.content ?? '';
+
+    const { results, missingIds } = parseBatchResponse(raw, expectedIds);
+
+    missingIds.forEach((id) =>
+      failReasons.set(id, `id=${id} missing or invalid in LLM response`)
+    );
+
+    return { results, failReasons };
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    expectedIds.forEach((id) => failReasons.set(id, reason));
+    return { results: new Map(), failReasons };
+  }
 }

@@ -15,7 +15,7 @@
 
 // Note: .env.local is loaded by scripts/_load-env.cjs via --require before this file runs.
 import { supabaseAdmin } from '../lib/supabase';
-import { summarizeArticle } from '../lib/gemini';
+import { summarizeBatch, type BatchInput, type HebrewSummary } from '../lib/gemini';
 import { RSS_SOURCES, fetchFeed, type FeedItem } from '../lib/rss';
 import type { RssSource, Category } from '../lib/types';
 
@@ -28,9 +28,6 @@ const CONFIG = {
   articlesPerSource: 3,   // fetch 3 articles per RSS source per run
   maxPerCategory: 40,     // store up to 40 articles per category per run
 } as const;
-
-/** Max concurrent Gemini API calls (balance between speed and rate limits). */
-const GEMINI_CONCURRENCY = 8;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -203,50 +200,99 @@ async function main(): Promise<void> {
     return;
   }
 
-  // ── Step 4: Summarise and insert each new article ─────────────────────────
+  // ── Step 4: Batch-summarise all new articles, then insert ─────────────────
 
-  let insertedCount = 0;
+  const BATCH_SIZE = 10;
   const fetchedAt = new Date().toISOString();
+  let insertedCount = 0;
 
-  // Process in batches — GEMINI_CONCURRENCY items run in parallel per batch,
-  // batches run sequentially to respect rate limits.
-  const batches = chunk(newCandidates, GEMINI_CONCURRENCY);
+  // Assign a stable numeric ID to each candidate for tracking across retries
+  const indexedCandidates = newCandidates.map((c, i) => ({ ...c, id: i }));
 
-  for (const [batchIdx, batch] of batches.entries()) {
-    const batchResults = await Promise.allSettled(
-      batch.map(async ({ source, item }, itemIdx) => {
-        const globalIdx = batchIdx * GEMINI_CONCURRENCY + itemIdx + 1;
-        console.log(
-          `[fetch] Processing ${globalIdx}/${newCandidates.length}: "${item.title.slice(0, 70)}"`
+  const toBatchInput = (c: (typeof indexedCandidates)[0]): BatchInput => ({
+    id: c.id,
+    title: c.item.title,
+    content: c.item.content,
+    source: c.source.name,
+  });
+
+  // ── Attempt 1: all batches in parallel ───────────────────────────────────
+
+  const batches = chunk(indexedCandidates, BATCH_SIZE);
+  console.log(
+    `\n[fetch] Summarising ${newCandidates.length} articles in ${batches.length} parallel batches (attempt 1)…`
+  );
+
+  const attempt1Settled = await Promise.allSettled(
+    batches.map((batch) => summarizeBatch(batch.map(toBatchInput), 1))
+  );
+
+  const allSummaries = new Map<number, HebrewSummary>();
+  const attempt1FailReasons = new Map<number, string>();
+
+  for (const result of attempt1Settled) {
+    if (result.status === 'fulfilled') {
+      result.value.results.forEach((s, id) => allSummaries.set(id, s));
+      result.value.failReasons.forEach((r, id) => attempt1FailReasons.set(id, r));
+    }
+  }
+
+  console.log(
+    `[fetch] Attempt 1: ${allSummaries.size} succeeded, ${attempt1FailReasons.size} failed.`
+  );
+
+  // ── Attempt 2: retry all failed candidates as one batch ──────────────────
+
+  const failedAfter1 = indexedCandidates.filter((c) => !allSummaries.has(c.id));
+
+  if (failedAfter1.length > 0) {
+    console.log(`[fetch] Retrying ${failedAfter1.length} failed articles (attempt 2)…`);
+
+    const { results: retryResults, failReasons: attempt2FailReasons } =
+      await summarizeBatch(failedAfter1.map(toBatchInput), 2);
+
+    retryResults.forEach((s, id) => allSummaries.set(id, s));
+
+    // Log anything still failing after both attempts
+    for (const c of failedAfter1) {
+      if (!allSummaries.has(c.id)) {
+        console.warn(
+          `[fetch] ✗ SKIP after 2 attempts: "${c.item.title.slice(0, 60)}…"\n` +
+            `  source:    ${c.source.name}\n` +
+            `  attempt 1: ${attempt1FailReasons.get(c.id) ?? 'unknown'}\n` +
+            `  attempt 2: ${attempt2FailReasons.get(c.id) ?? 'unknown'}`
         );
+      }
+    }
+  }
 
-        const { title_he, summary_he } = await summarizeArticle(
-          item.title,
-          item.content,
-          source.name
-        );
+  // ── Insert all successfully summarised articles ───────────────────────────
 
-        const row: ArticleRow = {
-          title: item.title,
-          title_he,
-          summary_he,
-          url: item.url,
-          source: source.name,
-          category: source.category,
-          published_at: item.publishedAt ? item.publishedAt.toISOString() : null,
-          fetched_at: fetchedAt,
-          image_url: item.imageUrl,
-        };
+  const summarizationFailures = indexedCandidates.filter(
+    (c) => !allSummaries.has(c.id)
+  ).length;
 
-        const success = await insertArticle(row);
-        if (success) console.log(`[fetch]   ✓ Inserted: "${title_he}"`);
-        return success;
-      })
-    );
+  for (const { id, source, item } of indexedCandidates) {
+    const summary = allSummaries.get(id);
+    if (!summary) continue;
 
-    insertedCount += batchResults.filter(
-      (r) => r.status === 'fulfilled' && r.value === true
-    ).length;
+    const row: ArticleRow = {
+      title: item.title,
+      title_he: summary.title_he,
+      summary_he: summary.summary_he,
+      url: item.url,
+      source: source.name,
+      category: source.category,
+      published_at: item.publishedAt ? item.publishedAt.toISOString() : null,
+      fetched_at: fetchedAt,
+      image_url: item.imageUrl,
+    };
+
+    const success = await insertArticle(row);
+    if (success) {
+      console.log(`[fetch] ✓ Inserted: "${summary.title_he}"`);
+      insertedCount++;
+    }
   }
 
   // ── Step 5: Prune old articles ────────────────────────────────────────────
@@ -259,7 +305,7 @@ async function main(): Promise<void> {
 
   console.log(`\n${'='.repeat(60)}`);
   console.log(
-    `[fetch] Done. Inserted ${insertedCount} articles, skipped ${skippedCount} duplicates.`
+    `[fetch] Done. Inserted ${insertedCount} articles, skipped ${skippedCount} duplicates, dropped ${summarizationFailures} (summarization failed).`
   );
   console.log(`[fetch] Total time: ${elapsed}s`);
   console.log(`${'='.repeat(60)}\n`);
