@@ -6,7 +6,7 @@ export const revalidate = 3600;
 
 const ARTICLES_PER_CATEGORY = 10; // change this to show more/fewer per category
 
-const CATEGORIES: Category[] = ['ai-builders', 'tech', 'economy', 'news', 'sports'];
+const CATEGORIES: Category[] = ['ai-builders', 'tech', 'economy', 'news', 'sports', 'qa-testing'];
 
 async function fetchArticles(): Promise<Record<Category, Article[]>> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
