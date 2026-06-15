@@ -1,4 +1,4 @@
-export type Category = 'ai-builders' | 'tech' | 'economy' | 'news' | 'sports';
+export type Category = 'ai-builders' | 'tech' | 'economy' | 'news' | 'sports' | 'qa-testing';
 export type Region = 'israel' | 'world';
 
 export interface Article {
@@ -20,6 +20,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   'economy': 'Economy',
   'news': 'News',
   'sports': 'Sports',
+  'qa-testing': 'QA & Testing',
 };
 
 export const CATEGORY_ICONS: Record<Category, string> = {
@@ -28,6 +29,7 @@ export const CATEGORY_ICONS: Record<Category, string> = {
   'economy':     '📊',
   'news':        '📰',
   'sports':      '⚽',
+  'qa-testing':  '🧪',
 };
 
 export const CATEGORY_COLORS: Record<Category, string> = {
@@ -36,6 +38,7 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   'economy': '#10B981',
   'news': '#F97316',
   'sports': '#EC4899',
+  'qa-testing': '#3B82F6',
 };
 
 // RSS source definition

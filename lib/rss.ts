@@ -285,6 +285,102 @@ export const RSS_SOURCES: RssSource[] = [
     region: 'world',
   },
 
+  // ── AI — בלוגי חברות ─────────────────────────────────────────────────────
+  {
+    url: 'https://openai.com/blog/rss.xml',
+    name: 'OpenAI Blog',
+    category: 'ai-builders',
+    region: 'world',
+  },
+  {
+    url: 'https://www.anthropic.com/rss.xml',
+    name: 'Anthropic Blog',
+    category: 'ai-builders',
+    region: 'world',
+  },
+  {
+    url: 'https://deepmind.google/discover/blog/rss.xml',
+    name: 'Google DeepMind',
+    category: 'ai-builders',
+    region: 'world',
+  },
+  {
+    url: 'https://huggingface.co/blog/feed.xml',
+    name: 'HuggingFace Blog',
+    category: 'ai-builders',
+    region: 'world',
+  },
+  {
+    url: 'https://ai.meta.com/blog/rss/',
+    name: 'Meta AI Blog',
+    category: 'ai-builders',
+    region: 'world',
+  },
+
+  // ── QA & Testing — ידני ──────────────────────────────────────────────────
+  {
+    url: 'https://www.ministryoftesting.com/feed',
+    name: 'Ministry of Testing',
+    category: 'qa-testing',
+    region: 'world',
+  },
+  {
+    url: 'https://www.softwaretestinghelp.com/feed/',
+    name: 'Software Testing Help',
+    category: 'qa-testing',
+    region: 'world',
+  },
+  {
+    url: 'https://www.satisfice.com/blog/feed',
+    name: 'James Bach',
+    category: 'qa-testing',
+    region: 'world',
+  },
+  {
+    url: 'https://lisacrispin.com/feed/',
+    name: 'Lisa Crispin',
+    category: 'qa-testing',
+    region: 'world',
+  },
+  {
+    url: 'https://www.eviltester.com/index.xml',
+    name: 'Evil Tester',
+    category: 'qa-testing',
+    region: 'world',
+  },
+
+  // ── QA & Testing — אוטומציה ──────────────────────────────────────────────
+  {
+    url: 'https://automationpanda.com/feed/',
+    name: 'Automation Panda',
+    category: 'qa-testing',
+    region: 'world',
+  },
+  {
+    url: 'https://www.selenium.dev/blog/index.xml',
+    name: 'Selenium Blog',
+    category: 'qa-testing',
+    region: 'world',
+  },
+  {
+    url: 'https://applitools.com/blog/feed/',
+    name: 'Applitools Blog',
+    category: 'qa-testing',
+    region: 'world',
+  },
+  {
+    url: 'https://www.lambdatest.com/blog/feed/',
+    name: 'LambdaTest Blog',
+    category: 'qa-testing',
+    region: 'world',
+  },
+  {
+    url: 'https://www.browserstack.com/blog/feed/',
+    name: 'BrowserStack Blog',
+    category: 'qa-testing',
+    region: 'world',
+  },
+
   // ── Sports — ישראל ───────────────────────────────────────────────────────
   {
     url: 'https://www.ynet.co.il/Integration/StoryRss2.xml',

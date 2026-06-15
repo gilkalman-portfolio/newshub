@@ -35,6 +35,7 @@ const COLUMN_ORDER: Category[] = [
   'economy',
   'news',
   'sports',
+  'qa-testing',
 ];
 
 // CSS custom-property variable names per category
@@ -44,6 +45,7 @@ const CAT_CSS_VAR: Record<Category, string> = {
   'economy':     'var(--cat-eco)',
   'news':        'var(--cat-news)',
   'sports':      'var(--cat-sport)',
+  'qa-testing':  'var(--cat-qa)',
 };
 
 // Animation delay per (column index, item index) — mimics prototype
