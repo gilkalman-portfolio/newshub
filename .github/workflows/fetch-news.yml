@@ -42,7 +42,7 @@ jobs:
       - name: Revalidate Vercel cache
         if: success()
         run: |
-          curl -sf "${{ secrets.SITE_URL }}/api/revalidate?secret=${{ secrets.REVALIDATE_SECRET }}" \
+          curl -sfL "${{ secrets.SITE_URL }}/api/revalidate?secret=${{ secrets.REVALIDATE_SECRET }}" \
             && echo "✓ Cache revalidated" \
             || echo "⚠ Revalidation failed (non-fatal)"
 

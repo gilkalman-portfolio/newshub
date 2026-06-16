@@ -194,10 +194,10 @@ async function main(): Promise<void> {
   );
 
   if (newCandidates.length === 0) {
-    console.log('[fetch] Nothing new to insert.');
+    console.log('[fetch] Nothing new to insert — all candidates already in DB.');
     await pruneOldArticles();
     console.log('\n[fetch] Done. Inserted 0 articles, skipped all as duplicates.');
-    return;
+    process.exit(0);
   }
 
   // ── Step 4: Batch-summarise all new articles, then insert ─────────────────
