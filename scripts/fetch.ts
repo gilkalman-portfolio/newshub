@@ -68,17 +68,24 @@ function chunk<T>(arr: T[], n: number): T[][] {
 async function getExistingUrls(urls: string[]): Promise<Set<string>> {
   if (urls.length === 0) return new Set();
 
-  const { data, error } = await supabaseAdmin
-    .from('articles')
-    .select('url')
-    .in('url', urls);
+  const batches = chunk(urls, 50);
+  const existing = new Set<string>();
 
-  if (error) {
-    console.error('[fetch] Failed to query existing URLs:', error.message);
-    return new Set(); // Treat as empty — worst case we attempt re-insert (PK will reject)
+  for (const batch of batches) {
+    const { data, error } = await supabaseAdmin
+      .from('articles')
+      .select('url')
+      .in('url', batch);
+
+    if (error) {
+      console.error('[fetch] Failed to query existing URLs:', error.message);
+      return new Set(); // Treat as empty — worst case we attempt re-insert (PK will reject)
+    }
+
+    for (const row of data ?? []) existing.add((row as { url: string }).url);
   }
 
-  return new Set((data ?? []).map((row: { url: string }) => row.url));
+  return existing;
 }
 
 /**
