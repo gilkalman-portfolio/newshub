@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import type { Article, Category } from '@/lib/types';
+import type { Article, Category, Quote } from '@/lib/types';
 import { refreshNews } from '@/app/actions';
 import { CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS } from '@/lib/types';
 import NewsItem from './NewsItem';
+import QuoteItem from './QuoteItem';
 
 type RegionFilter = 'all' | 'israel' | 'world';
 
@@ -86,6 +87,7 @@ export default function NewsGrid({ articles }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
   const [regionFilter, setRegionFilter] = useState<RegionFilter>('all');
+  const [quotes, setQuotes] = useState<Quote[]>([]);
 
   // Sliding pill refs
   const switcherRef = useRef<HTMLDivElement>(null);
@@ -170,6 +172,19 @@ export default function NewsGrid({ articles }: Props) {
     };
     window.addEventListener('scroll', handler, { passive: true });
     return () => window.removeEventListener('scroll', handler);
+  }, []);
+
+  // Fetch quotes on mount and every 15 minutes
+  useEffect(() => {
+    const fetchQuotes = async () => {
+      try {
+        const res = await fetch('/api/quotes?limit=5');
+        if (res.ok) setQuotes(await res.json());
+      } catch {}
+    };
+    fetchQuotes();
+    const interval = setInterval(fetchQuotes, 15 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const panelOpen = selectedArticle !== null;
@@ -291,6 +306,44 @@ export default function NewsGrid({ articles }: Props) {
             </div>
           );
         })}
+
+        {/* QUOTES column */}
+        <div
+          className="col"
+          style={{ '--cc': 'var(--neon)' } as React.CSSProperties}
+        >
+          <div className="cat-head">
+            <Link
+              href="/quotes"
+              className="cat-label"
+              style={{ textDecoration: 'none' }}
+              title="כל הציטוטים"
+            >
+              <span className="cat-icon">💬</span>
+              QUOTES ›
+            </Link>
+            <div className="cat-line" />
+          </div>
+
+          {quotes.map((quote, idx) => (
+            <QuoteItem
+              key={quote.id}
+              quote={quote}
+              animationDelay={`${(idx * 0.08).toFixed(2)}s`}
+            />
+          ))}
+
+          {quotes.length === 0 && (
+            <div
+              className="item"
+              style={{ '--d': '0.1s', cursor: 'default', opacity: 0.4 } as React.CSSProperties}
+            >
+              <div className="item-title" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                אין ציטוטים עדיין
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Backdrop overlay */}

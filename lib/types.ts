@@ -48,3 +48,21 @@ export interface RssSource {
   category: Category;
   region: Region;
 }
+
+export interface Quote {
+  id: string;
+  author_name: string;
+  author_handle: string;
+  author_firm: string | null;
+  tweet_id: string | null;
+  text: string;
+  tweeted_at: string | null;
+  fetched_at: string;
+}
+
+export const INVESTOR_CONFIG: Record<string, { name: string; firm: string; color: string }> = {
+  michaeljburry:    { name: 'Michael Burry',         firm: 'Scion Asset Mgmt',    color: '#ef4444' },
+  BillAckman:       { name: 'Bill Ackman',            firm: 'Pershing Square',      color: '#3b82f6' },
+  CathieDWood:      { name: 'Cathie Wood',            firm: 'ARK Invest',           color: '#8b5cf6' },
+  StanDruckenmiller:{ name: 'Stanley Druckenmiller',  firm: 'Duquesne Family Office', color: '#f59e0b' },
+};
