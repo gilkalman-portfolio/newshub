@@ -115,6 +115,30 @@ export const RSS_SOURCES: RssSource[] = [
     category: 'ai-builders',
     region: 'world',
   },
+  {
+    url: 'https://blogs.nvidia.com/feed/',
+    name: 'NVIDIA Blog',
+    category: 'ai-builders',
+    region: 'world',
+  },
+  {
+    url: 'https://aws.amazon.com/blogs/aws/feed/',
+    name: 'AWS News',
+    category: 'ai-builders',
+    region: 'world',
+  },
+  {
+    url: 'https://www.quantamagazine.org/feed/',
+    name: 'Quanta Magazine',
+    category: 'ai-builders',
+    region: 'world',
+  },
+  {
+    url: 'https://blogs.microsoft.com/feed/',
+    name: 'Microsoft Blog',
+    category: 'ai-builders',
+    region: 'world',
+  },
 
   // ── AI & Builders — ישראל ────────────────────────────────────────────────
   {
@@ -202,6 +226,12 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://dev.to/feed',
     name: 'Dev.to',
+    category: 'tech',
+    region: 'world',
+  },
+  {
+    url: 'https://www.fastcompany.com/technology/rss',
+    name: 'Fast Company Tech',
     category: 'tech',
     region: 'world',
   },
@@ -375,6 +405,12 @@ export const RSS_SOURCES: RssSource[] = [
     category: 'news',
     region: 'world',
   },
+  {
+    url: 'https://www.al-monitor.com/rss',
+    name: 'Al-Monitor',
+    category: 'news',
+    region: 'world',
+  },
 
   // ── AI — בלוגי חברות ─────────────────────────────────────────────────────
   {
@@ -444,6 +480,12 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://www.browserstack.com/blog/feed/',
     name: 'BrowserStack Blog',
+    category: 'qa-testing',
+    region: 'world',
+  },
+  {
+    url: 'https://www.cypress.io/blog/rss.xml',
+    name: 'Cypress Blog',
     category: 'qa-testing',
     region: 'world',
   },

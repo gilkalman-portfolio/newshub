@@ -320,6 +320,79 @@ def scrape_sport1() -> list[dict]:
         return []
 
 
+# ── TheMarker ─────────────────────────────────────────────────────────────────
+
+def scrape_themarker() -> list[dict]:
+    try:
+        page = Fetcher().get("https://www.themarker.com/")
+        items = []
+        seen: set[str] = set()
+        for art in page.css("article"):
+            href = art.css("a.xhlp2gg::attr(href)").get("").strip()
+            title = art.css("span.teaser-title::text").get("").strip()
+            if not href or not title or href in seen:
+                continue
+            seen.add(href)
+            url = f"https://www.themarker.com{href}" if href.startswith("/") else href
+            items.append(make_item(
+                title=title,
+                url=url,
+                content=title,
+                source_name="TheMarker",
+                category="economy",
+                region="israel",
+            ))
+            if len(items) >= 6:
+                break
+        return items
+    except Exception as e:
+        print(f"[scraper] TheMarker failed: {e}")
+        return []
+
+
+# ── ביזפורטל ───────────────────────────────────────────────────────────────────
+
+def scrape_bizportal() -> list[dict]:
+    try:
+        page = Fetcher().get("https://www.bizportal.co.il/")
+        items = []
+        seen: set[str] = set()
+        # Featured article
+        href = page.css("div.art_main_wrap a[data-tb-link]::attr(href)").get("").strip()
+        title = page.css("div.art_main_wrap h1[data-tb-title]::text").get("").strip()
+        if href and title and href not in seen:
+            seen.add(href)
+            items.append(make_item(
+                title=title,
+                url=href,
+                content=title,
+                source_name="ביזפורטל",
+                category="economy",
+                region="israel",
+            ))
+        # News list items
+        for a in page.css("div#art_main_wrap_add li a"):
+            href = a.css("::attr(href)").get("").strip()
+            title = a.css("::text").get("").strip()
+            if not href or not title or href in seen:
+                continue
+            seen.add(href)
+            items.append(make_item(
+                title=title,
+                url=href,
+                content=title,
+                source_name="ביזפורטל",
+                category="economy",
+                region="israel",
+            ))
+            if len(items) >= 6:
+                break
+        return items
+    except Exception as e:
+        print(f"[scraper] ביזפורטל failed: {e}")
+        return []
+
+
 # ── Registry ──────────────────────────────────────────────────────────────────
 
 SCRAPERS: dict[str, callable] = {
@@ -335,6 +408,8 @@ SCRAPERS: dict[str, callable] = {
     "calcalist":         scrape_calcalist,
     "kan":               scrape_kan,
     "sport1":            scrape_sport1,
+    "themarker":         scrape_themarker,
+    "bizportal":         scrape_bizportal,
 }
 
 DEFAULT_SOURCES = ",".join(SCRAPERS.keys())
