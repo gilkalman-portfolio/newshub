@@ -265,7 +265,7 @@ export async function summarizeBatch(
         max_tokens: Math.min(300 * articles.length, 8192),
         response_format: { type: 'json_object' },
       }),
-      signal: AbortSignal.timeout(90_000),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!response.ok) {

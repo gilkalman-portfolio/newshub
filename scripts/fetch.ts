@@ -27,6 +27,8 @@ import type { RssSource, Category } from '../lib/types';
 const CONFIG = {
   articlesPerSource: 3,   // fetch 3 articles per RSS source per run
   maxPerCategory: 40,     // store up to 40 articles per category per run
+  maxNewPerRun: 30,        // hard cap on new articles to summarize per run — prevents backlog from causing 45-min timeouts
+  llmConcurrency: 3,       // max parallel LLM batch calls — avoids hitting OpenRouter rate limits
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -59,6 +61,22 @@ function chunk<T>(arr: T[], n: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
   return out;
+}
+
+/** Limit concurrent async operations to `max` at a time. */
+function makeLimit(max: number) {
+  let active = 0;
+  const queue: Array<() => void> = [];
+  return async function <T>(fn: () => Promise<T>): Promise<T> {
+    if (active >= max) await new Promise<void>((r) => queue.push(r));
+    active++;
+    try {
+      return await fn();
+    } finally {
+      active--;
+      queue.shift()?.();
+    }
+  };
 }
 
 /**
@@ -191,14 +209,24 @@ async function main(): Promise<void> {
   const allUrls = candidates.map((c) => c.item.url);
   const existingUrls = await getExistingUrls(allUrls);
 
-  const newCandidates = candidates.filter(
+  const allNewCandidates = candidates.filter(
     ({ item }) => !existingUrls.has(item.url)
   );
-  const skippedCount = candidates.length - newCandidates.length;
+  const skippedCount = candidates.length - allNewCandidates.length;
+
+  // Cap per-run volume so a backlog never causes 30+ min LLM timeouts.
+  // Deferred articles are picked up in the next scheduled run (4 hours later).
+  const newCandidates = allNewCandidates.slice(0, CONFIG.maxNewPerRun);
+  const deferredCount = allNewCandidates.length - newCandidates.length;
 
   console.log(
-    `[fetch] After dedup: ${newCandidates.length} new, ${skippedCount} duplicates skipped.\n`
+    `[fetch] After dedup: ${allNewCandidates.length} new, ${skippedCount} duplicates skipped.`
   );
+  if (deferredCount > 0) {
+    console.log(`[fetch] Capped at ${CONFIG.maxNewPerRun}/run — ${deferredCount} deferred to next run.\n`);
+  } else {
+    console.log('');
+  }
 
   if (newCandidates.length === 0) {
     console.log('[fetch] Nothing new to insert — all candidates already in DB.');
@@ -223,15 +251,18 @@ async function main(): Promise<void> {
     source: c.source.name,
   });
 
-  // ── Attempt 1: all batches in parallel ───────────────────────────────────
+  // ── Attempt 1: batches with concurrency cap ──────────────────────────────
+  // Running all batches simultaneously hits OpenRouter rate limits and causes
+  // every batch to hang for the full 90 s timeout. Cap at llmConcurrency (3).
 
   const batches = chunk(indexedCandidates, BATCH_SIZE);
+  const limit = makeLimit(CONFIG.llmConcurrency);
   console.log(
-    `\n[fetch] Summarising ${newCandidates.length} articles in ${batches.length} parallel batches (attempt 1)…`
+    `\n[fetch] Summarising ${newCandidates.length} articles in ${batches.length} batches (≤${CONFIG.llmConcurrency} parallel, attempt 1)…`
   );
 
   const attempt1Settled = await Promise.allSettled(
-    batches.map((batch) => summarizeBatch(batch.map(toBatchInput), 1))
+    batches.map((batch) => limit(() => summarizeBatch(batch.map(toBatchInput), 1)))
   );
 
   const allSummaries = new Map<number, HebrewSummary>();
@@ -273,34 +304,34 @@ async function main(): Promise<void> {
     }
   }
 
-  // ── Insert all successfully summarised articles ───────────────────────────
+  // ── Insert all successfully summarised articles (parallel) ───────────────
 
   const summarizationFailures = indexedCandidates.filter(
     (c) => !allSummaries.has(c.id)
   ).length;
 
-  for (const { id, source, item } of indexedCandidates) {
-    const summary = allSummaries.get(id);
-    if (!summary) continue;
-
-    const row: ArticleRow = {
-      title: item.title,
-      title_he: summary.title_he,
-      summary_he: summary.summary_he,
-      url: item.url,
-      source: source.name,
-      category: source.category,
-      published_at: item.publishedAt ? item.publishedAt.toISOString() : null,
-      fetched_at: fetchedAt,
-      image_url: item.imageUrl,
-    };
-
-    const success = await insertArticle(row);
-    if (success) {
-      console.log(`[fetch] ✓ Inserted: "${summary.title_he}"`);
-      insertedCount++;
-    }
-  }
+  const insertSettled = await Promise.allSettled(
+    indexedCandidates
+      .filter(({ id }) => allSummaries.has(id))
+      .map(async ({ id, source, item }) => {
+        const summary = allSummaries.get(id)!;
+        const row: ArticleRow = {
+          title: item.title,
+          title_he: summary.title_he,
+          summary_he: summary.summary_he,
+          url: item.url,
+          source: source.name,
+          category: source.category,
+          published_at: item.publishedAt ? item.publishedAt.toISOString() : null,
+          fetched_at: fetchedAt,
+          image_url: item.imageUrl,
+        };
+        const success = await insertArticle(row);
+        if (success) console.log(`[fetch] ✓ Inserted: "${summary.title_he}"`);
+        return success;
+      })
+  );
+  insertedCount = insertSettled.filter((r) => r.status === 'fulfilled' && r.value).length;
 
   // ── Step 5: Prune old articles ────────────────────────────────────────────
 
