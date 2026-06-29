@@ -61,8 +61,8 @@ export interface Quote {
 }
 
 export const INVESTOR_CONFIG: Record<string, { name: string; firm: string; color: string }> = {
-  michaeljburry:    { name: 'Michael Burry',         firm: 'Scion Asset Mgmt',    color: '#ef4444' },
-  BillAckman:       { name: 'Bill Ackman',            firm: 'Pershing Square',      color: '#3b82f6' },
-  CathieDWood:      { name: 'Cathie Wood',            firm: 'ARK Invest',           color: '#8b5cf6' },
-  StanDruckenmiller:{ name: 'Stanley Druckenmiller',  firm: 'Duquesne Family Office', color: '#f59e0b' },
+  michaeljburry: { name: 'Michael Burry',  firm: 'Scion Asset Mgmt', color: '#ef4444' },
+  BillAckman:    { name: 'Bill Ackman',    firm: 'Pershing Square',   color: '#3b82f6' },
+  CathieDWood:   { name: 'Cathie Wood',   firm: 'ARK Invest',        color: '#8b5cf6' },
+  // Druckenmiller אין לו חשבון X פעיל — להוסיף handle כשיימצא
 };
