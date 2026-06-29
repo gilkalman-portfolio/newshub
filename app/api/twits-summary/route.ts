@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const OPENROUTER_BASE    = 'https://openrouter.ai/api/v1';
-const MODEL_ID           = 'google/gemini-2.5-flash';
+const MODEL_ID = 'gemini-2.5-flash';
 
 export interface TwitsSummaryRequest {
   ticker: string;
@@ -41,8 +40,9 @@ ${lines}
 }
 
 export async function POST(req: NextRequest) {
-  if (!OPENROUTER_API_KEY) {
-    return NextResponse.json({ error: 'OPENROUTER_API_KEY not set' }, { status: 500 });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: 'GEMINI_API_KEY not set' }, { status: 500 });
   }
 
   let body: TwitsSummaryRequest;
@@ -60,34 +60,18 @@ export async function POST(req: NextRequest) {
   const prompt = buildPrompt(ticker, twits.slice(0, 20));
 
   try {
-    const res = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://newshub.vercel.app',
-        'X-Title': 'NewsHUB',
-      },
-      body: JSON.stringify({
-        model:       MODEL_ID,
-        messages:    [{ role: 'user', content: prompt }],
-        temperature: 0.5,
-        max_tokens:  400,
-      }),
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: MODEL_ID,
+      generationConfig: { temperature: 0.5, maxOutputTokens: 400 },
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.error('[twits-summary] OpenRouter error:', res.status, text);
-      return NextResponse.json({ error: `OpenRouter ${res.status}` }, { status: 502 });
-    }
-
-    const data = await res.json() as { choices: Array<{ message: { content: string } }> };
-    const summary_he = data.choices[0]?.message?.content?.trim() ?? 'לא ניתן היה לסכם.';
+    const result = await model.generateContent(prompt);
+    const summary_he = result.response.text().trim() || 'לא ניתן היה לסכם.';
 
     return NextResponse.json({ summary_he } satisfies TwitsSummaryResponse);
   } catch (err: any) {
-    console.error('[twits-summary] fetch failed:', err.message);
+    console.error('[twits-summary] Gemini error:', err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

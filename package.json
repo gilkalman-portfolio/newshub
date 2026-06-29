@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "fetch": "tsx --require ./scripts/_load-env.cjs scripts/fetch.ts",
-    "migrate": "tsx --require ./scripts/_load-env.cjs scripts/migrate.ts"
+    "migrate": "tsx --require ./scripts/_load-env.cjs scripts/migrate.ts",
+    "test:gemini": "tsx --require ./scripts/_load-env.cjs scripts/test-gemini.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
