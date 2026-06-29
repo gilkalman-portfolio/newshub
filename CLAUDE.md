@@ -24,6 +24,8 @@ After every code change, commit and push so changes go live.
 - `lib/rss.ts` — 79 RSS sources across 6 categories
 - `scripts/fetch.ts` — daily ETL: RSS + Scraper Service → Gemini → Supabase
 - `scraper-service/main.py` — Scrapling microservice (Reddit, GitHub Trending, N12, Funder)
+- `app/api/quotes/route.ts` — investor quotes: GET from Supabase, POST fetches from X/Twitter API
+- `app/quotes/page.tsx` — quotes feed page
 
 ## Refresh Cadence (stocks page)
 | Data | Interval |
@@ -67,3 +69,11 @@ Logic: Polygon V3 with 30-day filter → if <2 results, fallback to Yahoo Financ
 `POLYGON_API_KEY`, `APIFY_TOKEN`, `OPENROUTER_API_KEY`,
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
 `SCRAPER_SERVICE_URL` ← Railway URL of the scraper service (optional; pipeline works without it)
+
+**Investor Quotes (app/api/quotes):**
+`X_BEARER_TOKEN` ← Twitter/X API v2 Bearer token (required for POST /api/quotes to fetch new tweets)
+
+Tracked investors: Michael Burry, Bill Ackman, Cathie Wood, Stanley Druckenmiller.
+POST /api/quotes fetches latest tweets and upserts to Supabase `quotes` table.
+GET /api/quotes reads from Supabase (no X token needed).
+⚠️ X API free tier is very limited — call POST sparingly (once/day max).
