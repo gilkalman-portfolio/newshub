@@ -17,7 +17,7 @@
 import { supabaseAdmin } from '../lib/supabase';
 import { summarizeBatch, type BatchInput, type HebrewSummary } from '../lib/gemini';
 import { RSS_SOURCES, fetchFeed, type FeedItem } from '../lib/rss';
-import type { RssSource, Category } from '../lib/types';
+import type { RssSource, Category, Region } from '../lib/types';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -40,6 +40,17 @@ interface PendingArticle {
   item: FeedItem;
 }
 
+interface ScraperItem {
+  title: string;
+  url: string;
+  content: string;
+  publishedAt: string | null;
+  imageUrl: string | null;
+  source: string;
+  category: string;
+  region: string;
+}
+
 interface ArticleRow {
   title: string;
   title_he: string;
@@ -55,6 +66,51 @@ interface ArticleRow {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Fetch additional articles from the Scrapling microservice (non-RSS sources).
+ * Returns an empty array if SCRAPER_SERVICE_URL is not set — fully optional.
+ */
+async function fetchFromScraper(): Promise<PendingArticle[]> {
+  const scraperUrl = process.env.SCRAPER_SERVICE_URL;
+  if (!scraperUrl) return [];
+
+  try {
+    console.log('[fetch] Fetching from Scraper Service…');
+    const sources = [
+      'reddit-investing', 'reddit-technology', 'reddit-artificial', 'reddit-worldnews',
+      'github-trending', 'funder', 'n12',
+    ].join(',');
+
+    const res = await fetch(`${scraperUrl}/scrape?sources=${sources}`, {
+      signal: AbortSignal.timeout(90_000),
+    });
+    if (!res.ok) throw new Error(`Scraper returned HTTP ${res.status}`);
+
+    const items: ScraperItem[] = await res.json();
+
+    return items
+      .filter(item => item.url && item.title)
+      .map(item => ({
+        source: {
+          url: item.url,
+          name: item.source,
+          category: item.category as Category,
+          region: item.region as Region,
+        },
+        item: {
+          title: item.title,
+          url: item.url,
+          content: item.content || item.title,
+          publishedAt: item.publishedAt ? new Date(item.publishedAt) : null,
+          imageUrl: item.imageUrl ?? null,
+        },
+      }));
+  } catch (err: any) {
+    console.error('[fetch] Scraper service failed (non-fatal):', err.message);
+    return [];
+  }
+}
 
 /** Split an array into chunks of size `n`. */
 function chunk<T>(arr: T[], n: number): T[][] {
@@ -147,17 +203,21 @@ async function main(): Promise<void> {
   console.log(`\n${'='.repeat(60)}`);
   console.log(`[fetch] NewsHub fetch started at ${startTime.toISOString()}`);
   console.log(`[fetch] Total RSS sources: ${RSS_SOURCES.length}`);
+  console.log(`[fetch] Scraper service: ${process.env.SCRAPER_SERVICE_URL ?? 'not configured (skipping)'}`);
   console.log(`${'='.repeat(60)}\n`);
 
-  // ── Step 1: Fetch all RSS feeds in parallel ───────────────────────────────
+  // ── Step 1: Fetch RSS feeds + Scraper Service in parallel ────────────────
 
-  console.log('[fetch] Fetching all RSS feeds in parallel…\n');
+  console.log('[fetch] Fetching all RSS feeds and Scraper Service in parallel…\n');
 
-  const feedResults = await Promise.allSettled(
-    RSS_SOURCES.map((source) =>
-      fetchFeed(source).then((items) => ({ source, items }))
-    )
-  );
+  const [feedResults, scraperCandidates] = await Promise.all([
+    Promise.allSettled(
+      RSS_SOURCES.map((source) =>
+        fetchFeed(source).then((items) => ({ source, items }))
+      )
+    ),
+    fetchFromScraper(),
+  ]);
 
   // ── Step 2: Collect candidate items per source ───────────────────────────
   //
@@ -202,7 +262,20 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log(`\n[fetch] Candidate articles (${CONFIG.articlesPerSource} per source, max ${CONFIG.maxPerCategory}/category): ${candidates.length}`);
+  // ── Step 1b: Add Scraper Service candidates (same category cap) ──────────
+  for (const candidate of scraperCandidates) {
+    if (!candidate.item.url) continue;
+    const catCount = categoryCount[candidate.source.category] ?? 0;
+    if (catCount < CONFIG.maxPerCategory) {
+      candidates.push(candidate);
+      categoryCount[candidate.source.category] = catCount + 1;
+    }
+  }
+  if (scraperCandidates.length > 0) {
+    console.log(`[fetch] Scraper service added ${scraperCandidates.length} candidates.`);
+  }
+
+  console.log(`\n[fetch] Candidate articles (RSS + scraper, max ${CONFIG.maxPerCategory}/category): ${candidates.length}`);
 
   // ── Step 3: Dedup against Supabase ───────────────────────────────────────
 
