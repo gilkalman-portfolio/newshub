@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const MODEL_ID = 'gemini-2.5-flash';
+const MODEL_ID = 'gemini-2.0-flash';
 
 export interface TwitsSummaryRequest {
   ticker: string;
