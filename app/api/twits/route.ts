@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const maxDuration = 60; // Vercel Pro max for serverless functions
+
 const APIFY_TOKEN = process.env.APIFY_TOKEN;
 const ACTOR_ID    = 'automation-lab~stocktwits-scraper';
 const APIFY_URL   = `https://api.apify.com/v2/acts/${ACTOR_ID}/run-sync-get-dataset-items`;
@@ -30,10 +32,17 @@ export async function GET(req: NextRequest) {
 
   if (!tickers.length) return NextResponse.json([] as TwitsResult[]);
 
+  // Abort the fetch after 50s — must be less than maxDuration (60s) so Vercel
+  // has time to return the response before killing the function
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 50_000);
+
   try {
     // Single Apify run for all tickers — much cheaper than one run per ticker
+    // timeout=45 tells Apify to return partial results after 45s rather than
+    // running indefinitely; keeps us well within the 50s fetch abort signal
     const res = await fetch(
-      `${APIFY_URL}?token=${APIFY_TOKEN}&timeout=90&memoryMbytes=256`,
+      `${APIFY_URL}?token=${APIFY_TOKEN}&timeout=45&memoryMbytes=256`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -42,10 +51,12 @@ export async function GET(req: NextRequest) {
           symbols:     tickers,
           maxMessages: 8,
         }),
-        // Cache for 1h server-side — balance between freshness and Apify cost
+        signal: controller.signal,
         next: { revalidate: 3600 },
       }
     );
+
+    clearTimeout(timer);
 
     if (!res.ok) {
       const text = await res.text();
@@ -63,7 +74,6 @@ export async function GET(req: NextRequest) {
     for (const ticker of tickers) grouped[ticker] = [];
 
     for (const item of raw_items) {
-      // Each item has a `symbols` array — find which of our tickers it belongs to
       const itemSymbols: string[] = (item.symbols ?? []).map((s: any) =>
         typeof s === 'string' ? s : s?.symbol ?? ''
       );
@@ -93,6 +103,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (err: any) {
+    clearTimeout(timer);
     console.error('[twits] fetch failed:', err.message);
     return NextResponse.json(
       tickers.map(t => ({ ticker: t, twits: [], error: err.message })),
