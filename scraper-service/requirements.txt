@@ -1,0 +1,4 @@
+scrapling[fetchers]
+fastapi
+uvicorn[standard]
+httpx
