@@ -91,6 +91,31 @@ export const RSS_SOURCES: RssSource[] = [
     category: 'ai-builders',
     region: 'world',
   },
+  {
+    url: 'https://www.technologyreview.com/feed/',
+    name: 'MIT Tech Review',
+    category: 'ai-builders',
+    region: 'world',
+  },
+  {
+    url: 'https://spectrum.ieee.org/feeds/feed.rss',
+    name: 'IEEE Spectrum',
+    category: 'ai-builders',
+    region: 'world',
+  },
+  {
+    url: 'https://simonwillison.net/atom/everything/',
+    name: 'Simon Willison',
+    category: 'ai-builders',
+    region: 'world',
+  },
+  {
+    url: 'https://arxiv.org/rss/cs.AI',
+    name: 'arXiv AI',
+    category: 'ai-builders',
+    region: 'world',
+  },
+
   // ── AI & Builders — ישראל ────────────────────────────────────────────────
   {
     url: 'https://www.geektime.co.il/feed/',
@@ -101,6 +126,12 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://nocamels.com/feed/',
     name: 'NoCamels',
+    category: 'ai-builders',
+    region: 'israel',
+  },
+  {
+    url: 'https://www.hayadan.org.il/rss',
+    name: 'הידען',
     category: 'ai-builders',
     region: 'israel',
   },
@@ -162,11 +193,35 @@ export const RSS_SOURCES: RssSource[] = [
     category: 'tech',
     region: 'world',
   },
+  {
+    url: 'https://lobste.rs/rss',
+    name: 'Lobsters',
+    category: 'tech',
+    region: 'world',
+  },
+  {
+    url: 'https://dev.to/feed',
+    name: 'Dev.to',
+    category: 'tech',
+    region: 'world',
+  },
 
   // ── Economy — ישראל ──────────────────────────────────────────────────────
   {
     url: 'https://www.jpost.com/tags/israel-economy/rss',
     name: 'JPost Economy',
+    category: 'economy',
+    region: 'israel',
+  },
+  {
+    url: 'https://www.globes.co.il/rss/rss876.htm',
+    name: 'גלובס',
+    category: 'economy',
+    region: 'israel',
+  },
+  {
+    url: 'https://www.calcalist.co.il/rss/article',
+    name: 'כלכליסט',
     category: 'economy',
     region: 'israel',
   },
@@ -220,6 +275,24 @@ export const RSS_SOURCES: RssSource[] = [
     category: 'economy',
     region: 'world',
   },
+  {
+    url: 'https://feeds.reuters.com/reuters/businessNews',
+    name: 'Reuters Business',
+    category: 'economy',
+    region: 'world',
+  },
+  {
+    url: 'https://feeds.marketwatch.com/marketwatch/topstories/',
+    name: 'MarketWatch',
+    category: 'economy',
+    region: 'world',
+  },
+  {
+    url: 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml',
+    name: 'Wall Street Journal',
+    category: 'economy',
+    region: 'world',
+  },
 
   // ── News — ישראל ─────────────────────────────────────────────────────────
   {
@@ -243,6 +316,24 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://www.israelhayom.com/feed/',
     name: 'Israel Hayom',
+    category: 'news',
+    region: 'israel',
+  },
+  {
+    url: 'https://www.maariv.co.il/rss/rssfeedstopstories',
+    name: 'מעריב',
+    category: 'news',
+    region: 'israel',
+  },
+  {
+    url: 'https://www.kan.org.il/content/rss',
+    name: 'כאן 11',
+    category: 'news',
+    region: 'israel',
+  },
+  {
+    url: 'https://rss.walla.co.il/feed/22',
+    name: 'וואלה חדשות',
     category: 'news',
     region: 'israel',
   },
@@ -281,6 +372,18 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://www.aljazeera.com/xml/rss/all.xml',
     name: 'Al Jazeera',
+    category: 'news',
+    region: 'world',
+  },
+  {
+    url: 'https://feeds.reuters.com/reuters/worldnews',
+    name: 'Reuters World',
+    category: 'news',
+    region: 'world',
+  },
+  {
+    url: 'https://rss.dw.com/rdf/rss-en-all',
+    name: 'Deutsche Welle',
     category: 'news',
     region: 'world',
   },
@@ -417,6 +520,12 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://sports.yahoo.com/rss/',
     name: 'Yahoo Sports',
+    category: 'sports',
+    region: 'world',
+  },
+  {
+    url: 'https://www.goal.com/feeds/en/news',
+    name: 'Goal.com',
     category: 'sports',
     region: 'world',
   },
