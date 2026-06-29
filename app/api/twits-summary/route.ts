@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateText } from '@/lib/llm';
 
-const MODEL_ID = 'gemini-2.0-flash';
+const GEMINI_MODEL = 'gemini-2.0-flash';
 
 export interface TwitsSummaryRequest {
   ticker: string;
@@ -40,11 +40,6 @@ ${lines}
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: 'GEMINI_API_KEY not set' }, { status: 500 });
-  }
-
   let body: TwitsSummaryRequest;
   try {
     body = await req.json();
@@ -60,18 +55,15 @@ export async function POST(req: NextRequest) {
   const prompt = buildPrompt(ticker, twits.slice(0, 20));
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: MODEL_ID,
-      generationConfig: { temperature: 0.5, maxOutputTokens: 400 },
-    });
-
-    const result = await model.generateContent(prompt);
-    const summary_he = result.response.text().trim() || 'לא ניתן היה לסכם.';
+    const summary_he = await generateText(prompt, {
+      geminiModel: GEMINI_MODEL,
+      temperature: 0.5,
+      maxTokens:   400,
+    }) || 'לא ניתן היה לסכם.';
 
     return NextResponse.json({ summary_he } satisfies TwitsSummaryResponse);
   } catch (err: any) {
-    console.error('[twits-summary] Gemini error:', err.message);
+    console.error('[twits-summary] error:', err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

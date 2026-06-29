@@ -1,18 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-if (!GEMINI_API_KEY) {
-  throw new Error(
-    'Missing environment variable: GEMINI_API_KEY\n' +
-      'Get one at https://aistudio.google.com'
-  );
-}
+import { generateText } from './llm';
 
 const MODEL_ID = 'gemini-2.5-flash';
 const LLM_TIMEOUT_MS = 30_000;
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 export interface HebrewSummary {
   title_he: string;
@@ -115,16 +104,12 @@ export async function summarizeBatch(
       `[gemini] Batch attempt ${attempt}: ${articles.length} articles (ids: ${expectedIds.join(', ')})`
     );
 
-    const model = genAI.getGenerativeModel({
-      model: MODEL_ID,
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: Math.min(500 * articles.length, 8192),
-      },
-    });
-
     const raw = await withTimeout(
-      model.generateContent(prompt).then((r) => r.response.text()),
+      generateText(prompt, {
+        geminiModel: MODEL_ID,
+        temperature: 0.4,
+        maxTokens:   Math.min(500 * articles.length, 8192),
+      }),
       LLM_TIMEOUT_MS
     );
 
