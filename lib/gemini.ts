@@ -118,9 +118,8 @@ export async function summarizeBatch(
     const model = genAI.getGenerativeModel({
       model: MODEL_ID,
       generationConfig: {
-        responseMimeType: 'application/json',
         temperature: 0.4,
-        maxOutputTokens: Math.min(300 * articles.length, 8192),
+        maxOutputTokens: Math.min(500 * articles.length, 8192),
       },
     });
 
