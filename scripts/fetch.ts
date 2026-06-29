@@ -82,9 +82,18 @@ async function fetchFromScraper(): Promise<PendingArticle[]> {
       'github-trending', 'funder', 'n12',
     ].join(',');
 
-    const res = await fetch(`${scraperUrl}/scrape?sources=${sources}`, {
-      signal: AbortSignal.timeout(90_000),
-    });
+    // Use explicit AbortController so we can clear the timer on success,
+    // preventing a dangling timeout from causing unhandled rejections later.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 90_000);
+    let res: Response;
+    try {
+      res = await fetch(`${scraperUrl}/scrape?sources=${sources}`, {
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!res.ok) throw new Error(`Scraper returned HTTP ${res.status}`);
 
     const items: ScraperItem[] = await res.json();
@@ -310,7 +319,7 @@ async function main(): Promise<void> {
 
   // ── Step 4: Batch-summarise all new articles, then insert ─────────────────
 
-  const BATCH_SIZE = 10;
+  const BATCH_SIZE = 5;
   const fetchedAt = new Date().toISOString();
   let insertedCount = 0;
 
@@ -325,8 +334,8 @@ async function main(): Promise<void> {
   });
 
   // ── Attempt 1: batches with concurrency cap ──────────────────────────────
-  // Running all batches simultaneously hits OpenRouter rate limits and causes
-  // every batch to hang for the full 90 s timeout. Cap at llmConcurrency (3).
+  // Large batches (10+) cause Gemini to truncate JSON mid-response. Batches of
+  // 5 stay well within output token limits. Cap at llmConcurrency (3) parallel.
 
   const batches = chunk(indexedCandidates, BATCH_SIZE);
   const limit = makeLimit(CONFIG.llmConcurrency);
@@ -420,6 +429,7 @@ async function main(): Promise<void> {
   );
   console.log(`[fetch] Total time: ${elapsed}s`);
   console.log(`${'='.repeat(60)}\n`);
+  process.exit(0);
 }
 
 // Entry point
