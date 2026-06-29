@@ -121,10 +121,7 @@ export default function StocksPage() {
     if (refreshing || !watchlist.length) return;
     setRefreshing(true);
     setRefreshStatus('idle');
-    const [ok] = await Promise.all([
-      fetchData(watchlist, 'prices'),
-      fetchTwits(watchlist),
-    ]);
+    const ok = await fetchData(watchlist, 'prices');
     setRefreshing(false);
     setRefreshStatus(ok ? 'ok' : 'err');
     setTimeout(() => setRefreshStatus('idle'), 2000);
