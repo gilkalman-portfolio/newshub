@@ -182,7 +182,7 @@ export const RSS_SOURCES: RssSource[] = [
     region: 'world',
   },
   {
-    url: 'https://gizmodo.com/rss',
+    url: 'https://gizmodo.com/feed/rss',
     name: 'Gizmodo',
     category: 'tech',
     region: 'world',
@@ -208,20 +208,14 @@ export const RSS_SOURCES: RssSource[] = [
 
   // ── Economy — ישראל ──────────────────────────────────────────────────────
   {
-    url: 'https://www.jpost.com/tags/israel-economy/rss',
+    url: 'https://www.jpost.com/rss/rssfeedsisraelnews.aspx',
     name: 'JPost Economy',
     category: 'economy',
     region: 'israel',
   },
   {
-    url: 'https://www.globes.co.il/rss/rss876.htm',
+    url: 'https://www.globes.co.il/webservice/rss/rssfeeder.asmx/FeederNode?iID=2',
     name: 'גלובס',
-    category: 'economy',
-    region: 'israel',
-  },
-  {
-    url: 'https://www.calcalist.co.il/rss/article',
-    name: 'כלכליסט',
     category: 'economy',
     region: 'israel',
   },
@@ -276,8 +270,8 @@ export const RSS_SOURCES: RssSource[] = [
     region: 'world',
   },
   {
-    url: 'https://feeds.reuters.com/reuters/businessNews',
-    name: 'Reuters Business',
+    url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10001147',
+    name: 'CNBC Business',
     category: 'economy',
     region: 'world',
   },
@@ -326,12 +320,6 @@ export const RSS_SOURCES: RssSource[] = [
     region: 'israel',
   },
   {
-    url: 'https://www.kan.org.il/content/rss',
-    name: 'כאן 11',
-    category: 'news',
-    region: 'israel',
-  },
-  {
     url: 'https://rss.walla.co.il/feed/22',
     name: 'וואלה חדשות',
     category: 'news',
@@ -376,8 +364,8 @@ export const RSS_SOURCES: RssSource[] = [
     region: 'world',
   },
   {
-    url: 'https://feeds.reuters.com/reuters/worldnews',
-    name: 'Reuters World',
+    url: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml',
+    name: 'WSJ World News',
     category: 'news',
     region: 'world',
   },
@@ -396,13 +384,7 @@ export const RSS_SOURCES: RssSource[] = [
     region: 'world',
   },
   {
-    url: 'https://www.anthropic.com/rss.xml',
-    name: 'Anthropic Blog',
-    category: 'ai-builders',
-    region: 'world',
-  },
-  {
-    url: 'https://deepmind.google/discover/blog/rss.xml',
+    url: 'https://deepmind.google/blog/rss.xml',
     name: 'Google DeepMind',
     category: 'ai-builders',
     region: 'world',
@@ -413,20 +395,8 @@ export const RSS_SOURCES: RssSource[] = [
     category: 'ai-builders',
     region: 'world',
   },
-  {
-    url: 'https://ai.meta.com/blog/rss/',
-    name: 'Meta AI Blog',
-    category: 'ai-builders',
-    region: 'world',
-  },
 
   // ── QA & Testing — ידני ──────────────────────────────────────────────────
-  {
-    url: 'https://www.ministryoftesting.com/feed',
-    name: 'Ministry of Testing',
-    category: 'qa-testing',
-    region: 'world',
-  },
   {
     url: 'https://www.softwaretestinghelp.com/feed/',
     name: 'Software Testing Help',
@@ -460,20 +430,14 @@ export const RSS_SOURCES: RssSource[] = [
     region: 'world',
   },
   {
-    url: 'https://www.selenium.dev/blog/index.xml',
-    name: 'Selenium Blog',
-    category: 'qa-testing',
-    region: 'world',
-  },
-  {
     url: 'https://applitools.com/blog/feed/',
     name: 'Applitools Blog',
     category: 'qa-testing',
     region: 'world',
   },
   {
-    url: 'https://www.lambdatest.com/blog/feed/',
-    name: 'LambdaTest Blog',
+    url: 'https://www.testmuai.com/blog/feed.xml',
+    name: 'TestMu AI Blog',
     category: 'qa-testing',
     region: 'world',
   },
@@ -488,12 +452,6 @@ export const RSS_SOURCES: RssSource[] = [
   {
     url: 'https://www.ynet.co.il/Integration/StoryRss2.xml',
     name: 'Ynet Sport',
-    category: 'sports',
-    region: 'israel',
-  },
-  {
-    url: 'https://sport1.maariv.co.il/feed/',
-    name: 'Sport1',
     category: 'sports',
     region: 'israel',
   },
@@ -524,8 +482,8 @@ export const RSS_SOURCES: RssSource[] = [
     region: 'world',
   },
   {
-    url: 'https://www.goal.com/feeds/en/news',
-    name: 'Goal.com',
+    url: 'https://www.fourfourtwo.com/feeds.xml',
+    name: 'FourFourTwo',
     category: 'sports',
     region: 'world',
   },
