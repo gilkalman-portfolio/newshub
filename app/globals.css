@@ -519,6 +519,21 @@ header {
   max-width: 60%;
 }
 
+/* QUOTES PAGE CARD */
+.quote-page-card {
+  display: block;
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.quote-page-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
 /* SLIDE PANEL */
 .overlay {
   position: fixed;

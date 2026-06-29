@@ -91,22 +91,9 @@ export default async function QuotesPage() {
                 href={tweetUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="quote-page-card"
                 style={{
-                  display: 'block',
-                  textDecoration: 'none',
-                  background: 'var(--surface)',
-                  border: `1px solid color-mix(in srgb, ${color} 20%, var(--border))`,
-                  borderRadius: 12,
-                  padding: '14px 18px',
-                  transition: 'transform 0.15s, box-shadow 0.15s',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 16px color-mix(in srgb, ${color} 15%, transparent)`;
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform = '';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '';
+                  borderColor: `color-mix(in srgb, ${color} 20%, var(--border))`,
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
