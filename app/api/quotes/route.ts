@@ -44,6 +44,7 @@ export async function POST() {
   const supabase = createClient(supabaseUrl, serviceKey);
   const handles  = Object.keys(INVESTOR_CONFIG);
   let totalInserted = 0;
+  const log: Record<string, unknown> = {};
 
   for (const handle of handles) {
     try {
@@ -52,24 +53,28 @@ export async function POST() {
         `https://api.twitter.com/2/users/by/username/${handle}`,
         { headers: { Authorization: `Bearer ${bearerToken}` } }
       );
+      const userBody = await userRes.json();
       if (!userRes.ok) {
-        console.error(`[quotes] user lookup failed for @${handle}:`, await userRes.text());
+        log[handle] = { step: 'user_lookup', status: userRes.status, body: userBody };
         continue;
       }
-      const { data: userData } = await userRes.json();
-      const userId: string = userData.id;
+      const userId: string = userBody.data.id;
 
       // 2. Fetch recent tweets (max 5 per user)
       const tweetsRes = await fetch(
         `https://api.twitter.com/2/users/${userId}/tweets?max_results=5&tweet.fields=created_at&exclude=retweets,replies`,
         { headers: { Authorization: `Bearer ${bearerToken}` } }
       );
+      const tweetsBody = await tweetsRes.json();
       if (!tweetsRes.ok) {
-        console.error(`[quotes] tweets fetch failed for @${handle}:`, await tweetsRes.text());
+        log[handle] = { step: 'tweets_fetch', status: tweetsRes.status, body: tweetsBody };
         continue;
       }
-      const { data: tweets } = await tweetsRes.json();
-      if (!tweets?.length) continue;
+      const tweets = tweetsBody.data;
+      if (!tweets?.length) {
+        log[handle] = { step: 'done', inserted: 0, reason: 'no_tweets_returned' };
+        continue;
+      }
 
       const config = INVESTOR_CONFIG[handle];
       const rows = tweets.map((t: { id: string; text: string; created_at?: string }) => ({
@@ -86,13 +91,17 @@ export async function POST() {
         .from('quotes')
         .upsert(rows, { onConflict: 'tweet_id', ignoreDuplicates: true });
 
-      if (error) console.error(`[quotes] upsert error for @${handle}:`, error.message);
-      else totalInserted += rows.length;
+      if (error) {
+        log[handle] = { step: 'upsert', error: error.message };
+      } else {
+        totalInserted += rows.length;
+        log[handle] = { step: 'done', inserted: rows.length };
+      }
 
     } catch (err) {
-      console.error(`[quotes] unexpected error for @${handle}:`, err);
+      log[handle] = { step: 'exception', error: String(err) };
     }
   }
 
-  return NextResponse.json({ ok: true, inserted: totalInserted });
+  return NextResponse.json({ ok: true, inserted: totalInserted, log });
 }
