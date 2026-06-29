@@ -20,9 +20,10 @@ Env vars: PORT (set automatically by Railway)
 """
 
 from fastapi import FastAPI
-from scrapling.fetchers import StealthyFetcher
+from scrapling.fetchers import StealthyFetcher, Fetcher
 from datetime import datetime, timezone
 import httpx
+import re
 
 app = FastAPI(title="NewsHub Scraper Service")
 
@@ -164,6 +165,161 @@ def scrape_n12() -> list[dict]:
         return []
 
 
+# ── Anthropic Blog ────────────────────────────────────────────────────────────
+
+def scrape_anthropic() -> list[dict]:
+    try:
+        page = Fetcher().get("https://www.anthropic.com/news")
+        items = []
+        seen: set[str] = set()
+        for a in page.css("li a[href^='/news/']"):
+            href = a.css("::attr(href)").get("").strip()
+            if not href or href in seen:
+                continue
+            seen.add(href)
+            text_parts = [t.strip() for t in a.css("::text").getall() if t.strip()]
+            title = text_parts[-1] if text_parts else ""
+            if not title or len(title) < 10:
+                continue
+            items.append(make_item(
+                title=title,
+                url=f"https://www.anthropic.com{href}",
+                content=title,
+                source_name="Anthropic Blog",
+                category="ai-builders",
+                region="world",
+            ))
+            if len(items) >= 6:
+                break
+        return items
+    except Exception as e:
+        print(f"[scraper] Anthropic Blog failed: {e}")
+        return []
+
+
+# ── Meta AI Blog ───────────────────────────────────────────────────────────────
+
+def scrape_meta_ai() -> list[dict]:
+    try:
+        page = Fetcher().get("https://ai.meta.com/blog/")
+        items = []
+        seen: set[str] = set()
+        for a in page.css("a[href^='https://ai.meta.com/blog/']"):
+            href = a.css("::attr(href)").get("").strip()
+            title = " ".join(a.css("::text").getall()).strip()
+            if not href or not title or len(title) < 15 or href in seen:
+                continue
+            seen.add(href)
+            items.append(make_item(
+                title=title,
+                url=href,
+                content=title,
+                source_name="Meta AI Blog",
+                category="ai-builders",
+                region="world",
+            ))
+            if len(items) >= 6:
+                break
+        return items
+    except Exception as e:
+        print(f"[scraper] Meta AI Blog failed: {e}")
+        return []
+
+
+# ── כלכליסט ────────────────────────────────────────────────────────────────────
+
+def scrape_calcalist() -> list[dict]:
+    try:
+        page = StealthyFetcher.fetch("https://www.calcalist.co.il/", headless=True)
+        items = []
+        seen: set[str] = set()
+        for slot in page.css(".slotView"):
+            href = slot.css(".slotTitle a::attr(href)").get("").strip()
+            title = slot.css(".slotTitle a::text").get("").strip()
+            if not href or "/article/" not in href or not title or href in seen:
+                continue
+            seen.add(href)
+            items.append(make_item(
+                title=title,
+                url=href,
+                content=title,
+                source_name="כלכליסט",
+                category="economy",
+                region="israel",
+            ))
+            if len(items) >= 6:
+                break
+        return items
+    except Exception as e:
+        print(f"[scraper] כלכליסט failed: {e}")
+        return []
+
+
+# ── כאן 11 ─────────────────────────────────────────────────────────────────────
+
+def scrape_kan() -> list[dict]:
+    try:
+        page = StealthyFetcher.fetch("https://www.kan.org.il/lobby/news/", headless=True)
+        items = []
+        seen: set[str] = set()
+        for a in page.css("a.unstyled-link"):
+            href = a.css("::attr(href)").get("").strip()
+            if not href or not re.search(r'/content/kan-news/.*\d{5,}/', href):
+                continue
+            if href in seen:
+                continue
+            seen.add(href)
+            text_parts = [t.strip() for t in a.css("::text").getall() if t.strip()]
+            title = text_parts[0] if text_parts else ""
+            if not title:
+                continue
+            items.append(make_item(
+                title=title,
+                url=href,
+                content=title,
+                source_name="כאן 11",
+                category="news",
+                region="israel",
+            ))
+            if len(items) >= 6:
+                break
+        return items
+    except Exception as e:
+        print(f"[scraper] כאן 11 failed: {e}")
+        return []
+
+
+# ── Sport1 ─────────────────────────────────────────────────────────────────────
+
+def scrape_sport1() -> list[dict]:
+    try:
+        page = Fetcher().get("https://sport1.maariv.co.il/")
+        items = []
+        seen: set[str] = set()
+        for a in page.css("a.image-wrapper"):
+            href = a.css("::attr(href)").get("").strip()
+            if not href or "/article/" not in href or href in seen:
+                continue
+            seen.add(href)
+            title = a.css("h3.article-card-title::text").get("").strip()
+            if not title:
+                continue
+            items.append(make_item(
+                title=title,
+                url=href,
+                content=title,
+                source_name="Sport1",
+                category="sports",
+                region="israel",
+            ))
+            if len(items) >= 6:
+                break
+        return items
+    except Exception as e:
+        print(f"[scraper] Sport1 failed: {e}")
+        return []
+
+
 # ── Registry ──────────────────────────────────────────────────────────────────
 
 SCRAPERS: dict[str, callable] = {
@@ -174,6 +330,11 @@ SCRAPERS: dict[str, callable] = {
     "github-trending":   scrape_github_trending,
     "funder":            scrape_funder,
     "n12":               scrape_n12,
+    "anthropic-blog":    scrape_anthropic,
+    "meta-ai-blog":      scrape_meta_ai,
+    "calcalist":         scrape_calcalist,
+    "kan":               scrape_kan,
+    "sport1":            scrape_sport1,
 }
 
 DEFAULT_SOURCES = ",".join(SCRAPERS.keys())

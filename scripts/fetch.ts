@@ -80,6 +80,7 @@ async function fetchFromScraper(): Promise<PendingArticle[]> {
     const sources = [
       'reddit-investing', 'reddit-technology', 'reddit-artificial', 'reddit-worldnews',
       'github-trending', 'funder', 'n12',
+      'anthropic-blog', 'meta-ai-blog', 'calcalist', 'kan', 'sport1',
     ].join(',');
 
     // Use explicit AbortController so we can clear the timer on success,
