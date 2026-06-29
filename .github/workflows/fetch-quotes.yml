@@ -1,0 +1,26 @@
+name: Quotes Fetch (2x daily)
+
+on:
+  schedule:
+    - cron: '0 8,20 * * *'   # 08:00 and 20:00 UTC
+  workflow_dispatch:           # Allow manual trigger for testing
+
+concurrency:
+  group: fetch-quotes
+  cancel-in-progress: false
+
+jobs:
+  fetch-quotes:
+    name: fetch-quotes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Fetch latest investor tweets
+        run: |
+          curl -sfL \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.REVALIDATE_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/quotes" \
+            && echo "✓ Quotes fetched" \
+            || echo "⚠ Quotes fetch failed (non-fatal)"

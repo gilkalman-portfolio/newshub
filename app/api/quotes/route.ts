@@ -29,7 +29,13 @@ export async function GET(request: Request) {
 
 // POST — fetch latest tweets from X API and upsert into Supabase
 // Call this from a cron or manually: POST /api/quotes
-export async function POST() {
+// Requires header: x-cron-secret matching REVALIDATE_SECRET env var
+export async function POST(request: Request) {
+  const secret = process.env.REVALIDATE_SECRET;
+  if (secret && request.headers.get('x-cron-secret') !== secret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const bearerToken = process.env.X_BEARER_TOKEN;
   if (!bearerToken) {
     return NextResponse.json({ error: 'X_BEARER_TOKEN not set' }, { status: 500 });
