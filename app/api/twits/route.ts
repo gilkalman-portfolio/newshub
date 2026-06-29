@@ -24,6 +24,7 @@ async function fetchSymbol(ticker: string): Promise<TwitsResult> {
       `https://api.stocktwits.com/api/2/streams/symbol/${ticker}.json`,
       {
         headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(8000),
         next: { revalidate: 3600 },
       }
     );
