@@ -67,7 +67,10 @@ async function callOpenRouter(
     }
     const data = await res.json();
     const text = data.choices?.[0]?.message?.content?.trim() ?? '';
-    if (text) return text;
+    if (text) {
+      console.log(`[llm] OpenRouter success: ${model}`);
+      return text;
+    }
     console.warn(`[llm] OpenRouter ${model} returned empty — trying next`);
   }
   throw new Error(`All OpenRouter models failed. Last error: ${lastError.slice(0, 200)}`);
