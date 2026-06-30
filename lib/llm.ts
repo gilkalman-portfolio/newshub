@@ -3,8 +3,13 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const GEMINI_API_KEY     = process.env.GEMINI_API_KEY;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-// Llama 3.3 70B — multilingual, handles Hebrew well
-const OPENROUTER_FALLBACK_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
+// Free models that handle Hebrew well — tried in order until one succeeds
+const OPENROUTER_FALLBACK_MODELS = [
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'google/gemma-4-31b-it:free',
+  'nousresearch/hermes-3-llama-3.1-405b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+];
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 function isQuotaError(err: unknown): boolean {
@@ -38,27 +43,34 @@ async function callOpenRouter(
   maxTokens: number
 ): Promise<string> {
   if (!OPENROUTER_API_KEY) throw new Error('OPENROUTER_API_KEY not set — no fallback available');
-  const res = await fetch(OPENROUTER_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://newshub-ruby.vercel.app',
-      'X-Title': 'NewsHUB',
-    },
-    body: JSON.stringify({
-      model: OPENROUTER_FALLBACK_MODEL,
-      messages: [{ role: 'user', content: prompt }],
-      temperature,
-      max_tokens: maxTokens,
-    }),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`OpenRouter ${res.status}: ${text.slice(0, 200)}`);
+  let lastError = '';
+  for (const model of OPENROUTER_FALLBACK_MODELS) {
+    const res = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://newshub-ruby.vercel.app',
+        'X-Title': 'NewsHUB',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature,
+        max_tokens: maxTokens,
+      }),
+    });
+    if (!res.ok) {
+      lastError = await res.text();
+      console.warn(`[llm] OpenRouter ${model} failed (${res.status}) — trying next`);
+      continue;
+    }
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content?.trim() ?? '';
+    if (text) return text;
+    console.warn(`[llm] OpenRouter ${model} returned empty — trying next`);
   }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() ?? '';
+  throw new Error(`All OpenRouter models failed. Last error: ${lastError.slice(0, 200)}`);
 }
 
 /**
