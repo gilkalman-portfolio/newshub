@@ -81,7 +81,7 @@ jobs:
       - name: Revalidate Vercel cache
         if: success()
         run: |
-          RESPONSE=$(curl -sf -w "\nHTTP_STATUS:%{http_code}" \
+          RESPONSE=$(curl -sfL -w "\nHTTP_STATUS:%{http_code}" \
             "${{ secrets.SITE_URL }}/api/revalidate?secret=${{ secrets.REVALIDATE_SECRET }}")
           HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
           BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS:")

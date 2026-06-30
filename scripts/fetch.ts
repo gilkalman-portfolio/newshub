@@ -28,7 +28,7 @@ const CONFIG = {
   articlesPerSource: 3,   // fetch 3 articles per RSS source per run
   maxPerCategory: 40,     // store up to 40 articles per category per run
   maxNewPerRun: 30,        // hard cap on new articles to summarize per run — prevents backlog from causing 45-min timeouts
-  llmConcurrency: 3,       // max parallel LLM batch calls — avoids hitting OpenRouter rate limits
+  llmConcurrency: 2,       // max parallel LLM batch calls — free OpenRouter models 429 under 3+ concurrent
 } as const;
 
 // ---------------------------------------------------------------------------
