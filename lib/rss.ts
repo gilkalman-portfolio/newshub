@@ -492,7 +492,7 @@ export const RSS_SOURCES: RssSource[] = [
 
   // ── Sports — ישראל ───────────────────────────────────────────────────────
   {
-    url: 'https://www.ynet.co.il/Integration/StoryRss2.xml',
+    url: 'https://www.ynet.co.il/Integration/StoryRss3.xml',
     name: 'Ynet Sport',
     category: 'sports',
     region: 'israel',
