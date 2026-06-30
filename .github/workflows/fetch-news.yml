@@ -20,6 +20,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       SITE_URL: ${{ secrets.SITE_URL }}
       SCRAPER_SERVICE_URL: http://127.0.0.1:8000
@@ -39,10 +40,17 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r scraper-service/requirements.txt
 
+      - name: Resolve Camoufox cache path
+        id: camoufox-path
+        run: |
+          PATH_VAL=$(python -c "import camoufox; print(camoufox.get_path())" 2>/dev/null || echo "")
+          CACHE_DIR=$(dirname "$PATH_VAL")
+          echo "dir=${CACHE_DIR:-~/.local/share/camoufox}" >> "$GITHUB_OUTPUT"
+
       - name: Cache Camoufox browser
         uses: actions/cache@v4
         with:
-          path: ~/.local/share/camoufox
+          path: ${{ steps.camoufox-path.outputs.dir }}
           key: camoufox-${{ hashFiles('scraper-service/requirements.txt') }}
 
       - name: Install Camoufox (if not cached)
