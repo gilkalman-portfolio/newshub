@@ -77,7 +77,9 @@ export async function generateText(
 
   if (GEMINI_API_KEY) {
     try {
-      return await callGemini(prompt, opts.geminiModel, temperature, maxTokens);
+      const result = await callGemini(prompt, opts.geminiModel, temperature, maxTokens);
+      if (result) return result;
+      console.warn('[llm] Gemini returned empty response — falling back to OpenRouter');
     } catch (err) {
       if (isQuotaError(err)) {
         console.warn('[llm] Gemini quota exceeded — falling back to OpenRouter');
