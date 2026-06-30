@@ -298,9 +298,19 @@ async function main(): Promise<void> {
   );
   const skippedCount = candidates.length - allNewCandidates.length;
 
-  // Cap per-run volume so a backlog never causes 30+ min LLM timeouts.
-  // Deferred articles are picked up in the next scheduled run (4 hours later).
-  const newCandidates = allNewCandidates.slice(0, CONFIG.maxNewPerRun);
+  // Distribute the per-run budget evenly across categories so no single category
+  // (e.g. ai-builders) starves the others. Each category gets an equal slice;
+  // any leftover slots are filled first-come-first-served.
+  const numCategories = [...new Set(allNewCandidates.map(c => c.source.category))].length || 1;
+  const maxNewPerCategory = Math.ceil(CONFIG.maxNewPerRun / numCategories);
+  const catNewCount: Partial<Record<string, number>> = {};
+  const newCandidates = allNewCandidates.filter(c => {
+    const cat = c.source.category;
+    const count = catNewCount[cat] ?? 0;
+    if (count >= maxNewPerCategory) return false;
+    catNewCount[cat] = count + 1;
+    return true;
+  }).slice(0, CONFIG.maxNewPerRun);
   const deferredCount = allNewCandidates.length - newCandidates.length;
 
   console.log(
