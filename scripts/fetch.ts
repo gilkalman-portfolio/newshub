@@ -382,17 +382,22 @@ async function main(): Promise<void> {
     `[fetch] Attempt 1: ${allSummaries.size} succeeded, ${attempt1FailReasons.size} failed.`
   );
 
-  // ── Attempt 2: retry all failed candidates as one batch ──────────────────
+  // ── Attempt 2: retry failed candidates in serial batches of 5 ──────────────
+  // Serial (no concurrency) + 60s timeout to avoid hammering OpenRouter free
+  // models that are already rate-limited from attempt 1.
 
   const failedAfter1 = indexedCandidates.filter((c) => !allSummaries.has(c.id));
+  const attempt2FailReasons = new Map<number, string>();
 
   if (failedAfter1.length > 0) {
-    console.log(`[fetch] Retrying ${failedAfter1.length} failed articles (attempt 2)…`);
+    console.log(`[fetch] Retrying ${failedAfter1.length} failed articles (attempt 2, serial batches)…`);
 
-    const { results: retryResults, failReasons: attempt2FailReasons } =
-      await summarizeBatch(failedAfter1.map(toBatchInput), 2);
-
-    retryResults.forEach((s, id) => allSummaries.set(id, s));
+    for (const retryBatch of chunk(failedAfter1, BATCH_SIZE)) {
+      const { results: retryResults, failReasons: batchFailReasons } =
+        await summarizeBatch(retryBatch.map(toBatchInput), 2);
+      retryResults.forEach((s, id) => allSummaries.set(id, s));
+      batchFailReasons.forEach((r, id) => attempt2FailReasons.set(id, r));
+    }
 
     // Log anything still failing after both attempts
     for (const c of failedAfter1) {

@@ -1,7 +1,8 @@
 import { generateText } from './llm';
 
 const MODEL_ID = 'gemini-2.5-flash';
-const LLM_TIMEOUT_MS = 30_000;
+const LLM_TIMEOUT_MS        = 30_000; // attempt 1 — Gemini is fast
+const LLM_TIMEOUT_MS_RETRY  = 60_000; // attempt 2 — OpenRouter free can be slow
 
 export interface HebrewSummary {
   title_he: string;
@@ -110,7 +111,7 @@ export async function summarizeBatch(
         temperature: 0.4,
         maxTokens:   Math.min(500 * articles.length, 8192),
       }),
-      LLM_TIMEOUT_MS
+      attempt === 1 ? LLM_TIMEOUT_MS : LLM_TIMEOUT_MS_RETRY
     );
 
     const { results, missingIds } = parseBatchResponse(raw, expectedIds);
