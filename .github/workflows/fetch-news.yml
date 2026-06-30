@@ -73,9 +73,17 @@ jobs:
       - name: Revalidate Vercel cache
         if: success()
         run: |
-          curl -sfL "${{ secrets.SITE_URL }}/api/revalidate?secret=${{ secrets.REVALIDATE_SECRET }}" \
-            && echo "✓ Cache revalidated" \
-            || echo "⚠ Revalidation failed (non-fatal)"
+          RESPONSE=$(curl -sf -w "\nHTTP_STATUS:%{http_code}" \
+            "${{ secrets.SITE_URL }}/api/revalidate?secret=${{ secrets.REVALIDATE_SECRET }}")
+          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
+          BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS:")
+          echo "Response: $BODY"
+          echo "HTTP status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "⚠ Revalidation failed with status $HTTP_STATUS"
+          else
+            echo "✓ Cache revalidated"
+          fi
 
       - name: Log failure
         if: failure()

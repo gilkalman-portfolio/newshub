@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
 
   // Revalidate all pages that read from Supabase
   revalidatePath('/', 'layout');
+  revalidatePath('/category', 'layout');
 
-  return NextResponse.json({ revalidated: true, at: new Date().toISOString() });
+  return NextResponse.json({ revalidated: true, paths: ['/', '/category'], at: new Date().toISOString() });
 }

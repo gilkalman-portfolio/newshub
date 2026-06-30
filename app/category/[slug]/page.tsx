@@ -14,7 +14,7 @@ import type { Article, Category } from '@/lib/types';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/lib/types';
 import CategoryPage from '@/components/CategoryPage';
 
-export const revalidate = 3600;
+export const revalidate = 300;
 
 const VALID_CATEGORIES: Category[] = [
   'ai-builders',

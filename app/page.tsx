@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Article, Category } from '@/lib/types';
 import NewsGrid from '@/components/NewsGrid';
 
-export const revalidate = 3600;
+export const revalidate = 300; // 5-min ISR fallback if on-demand revalidation fails
 
 const ARTICLES_PER_CATEGORY = 10; // change this to show more/fewer per category
 
