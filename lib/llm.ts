@@ -3,8 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const GEMINI_API_KEY     = process.env.GEMINI_API_KEY;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-// Free model on OpenRouter — different provider than Gemini so quota is independent
-const OPENROUTER_FALLBACK_MODEL = 'google/gemini-2.0-flash-exp:free';
+// Free Models Router — OpenRouter picks whichever free model is available; never goes stale
+const OPENROUTER_FALLBACK_MODEL = 'openrouter/free';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 function isQuotaError(err: unknown): boolean {
