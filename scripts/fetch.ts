@@ -100,9 +100,18 @@ async function fetchFromScraper(): Promise<PendingArticle[]> {
 
     const items: ScraperItem[] = await res.json();
 
-    return items
-      .filter(item => item.url && item.title)
-      .map(item => ({
+    const valid = items.filter(item => item.url && item.title);
+
+    // Log per-source counts so we can see what the scraper actually returned
+    const perSource: Record<string, number> = {};
+    for (const item of valid) perSource[item.source] = (perSource[item.source] ?? 0) + 1;
+    console.log(`[fetch] Scraper returned ${valid.length} items from ${Object.keys(perSource).length} sources:`);
+    for (const [src, count] of Object.entries(perSource)) {
+      console.log(`  ${src}: ${count}`);
+    }
+    if (valid.length === 0) console.log('  (no items returned — scraper may have failed silently)');
+
+    return valid.map(item => ({
         source: {
           url: item.url,
           name: item.source,
