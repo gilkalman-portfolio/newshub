@@ -12,12 +12,15 @@ const OPENROUTER_FALLBACK_MODELS = [
 ];
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-function isQuotaError(err: unknown): boolean {
+function isFallbackError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
   return (
     msg.includes('429') ||
+    msg.includes('503') ||
     msg.toLowerCase().includes('quota') ||
-    msg.toLowerCase().includes('resource_exhausted')
+    msg.toLowerCase().includes('resource_exhausted') ||
+    msg.toLowerCase().includes('service unavailable') ||
+    msg.toLowerCase().includes('high demand')
   );
 }
 
@@ -96,8 +99,8 @@ export async function generateText(
       if (result) return result;
       console.warn('[llm] Gemini returned empty response — falling back to OpenRouter');
     } catch (err) {
-      if (isQuotaError(err)) {
-        console.warn('[llm] Gemini quota exceeded — falling back to OpenRouter');
+      if (isFallbackError(err)) {
+        console.warn('[llm] Gemini unavailable — falling back to OpenRouter');
       } else {
         throw err;
       }
