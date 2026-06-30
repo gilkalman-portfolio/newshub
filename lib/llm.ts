@@ -3,8 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const GEMINI_API_KEY     = process.env.GEMINI_API_KEY;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-// Free Models Router — OpenRouter picks whichever free model is available; never goes stale
-const OPENROUTER_FALLBACK_MODEL = 'openrouter/free';
+// Llama 3.3 70B — multilingual, handles Hebrew well
+const OPENROUTER_FALLBACK_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 function isQuotaError(err: unknown): boolean {
