@@ -394,9 +394,11 @@ async function main(): Promise<void> {
 
   if (failedAfter1.length > 0) {
     // Backoff before retrying: attempt 1 likely just hammered the free LLM tier
-    // into 429s. Give providers a moment to recover before attempt 2.
-    const RETRY_BACKOFF_MS = 8_000;
-    const BATCH_GAP_MS     = 2_000;
+    // into 429s, which are per-minute request limits. Waiting ~90s lets the
+    // rate-limit window reset so attempt 2 can hit the free models again
+    // instead of escalating to the paid tier. Cheap for a 4h-cadence ETL.
+    const RETRY_BACKOFF_MS = 90_000;
+    const BATCH_GAP_MS     = 5_000;
     console.log(
       `[fetch] Retrying ${failedAfter1.length} failed articles (attempt 2, serial batches) after ${RETRY_BACKOFF_MS / 1000}s backoff…`
     );
