@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     const summary_he = await generateText(prompt, {
       geminiModel: GEMINI_MODEL,
       temperature: 0.5,
-      maxTokens:   400,
+      maxTokens:   600,
     }) || 'לא ניתן היה לסכם.';
 
     return NextResponse.json({ summary_he } satisfies TwitsSummaryResponse);

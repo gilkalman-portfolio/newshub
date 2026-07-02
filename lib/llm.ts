@@ -4,11 +4,14 @@ const GEMINI_API_KEY     = process.env.GEMINI_API_KEY;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 // Free models that handle Hebrew well — tried first to save credits.
+// Non-reasoning models only: reasoning models (nemotron-3, gpt-oss) burn the
+// max_tokens budget on hidden thinking and return truncated Hebrew content.
 const OPENROUTER_FREE_MODELS = [
   'meta-llama/llama-3.3-70b-instruct:free',
   'google/gemma-4-31b-it:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'google/gemma-4-26b-a4b-it:free',
   'nousresearch/hermes-3-llama-3.1-405b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
 ];
 
 // Paid fallback — reached ONLY when every free model is rate-limited/unavailable.
@@ -82,12 +85,21 @@ async function tryOpenRouterTier(
       continue;
     }
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content?.trim() ?? '';
-    if (text) {
+    const choice = data.choices?.[0];
+    const text = choice?.message?.content?.trim() ?? '';
+    // Reasoning models can hit max_tokens mid-thought and return a stub like
+    // "הקהילה ב-". Reject truncated output when reasoning ate the budget.
+    const truncated =
+      choice?.finish_reason === 'length' &&
+      (choice?.message?.reasoning || text.length < 80);
+    if (text && !truncated) {
       console.log(`[llm] OpenRouter[${tier}] success: ${model}`);
       return { text, lastError };
     }
-    console.warn(`[llm] OpenRouter[${tier}] ${model} returned empty — trying next`);
+    lastError = truncated ? `truncated output from ${model}` : lastError;
+    console.warn(
+      `[llm] OpenRouter[${tier}] ${model} returned ${truncated ? 'truncated' : 'empty'} output — trying next`
+    );
   }
   return { text: null, lastError };
 }
