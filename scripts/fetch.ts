@@ -132,6 +132,9 @@ async function fetchFromScraper(): Promise<PendingArticle[]> {
   }
 }
 
+/** Pause for `ms` milliseconds. */
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
 /** Split an array into chunks of size `n`. */
 function chunk<T>(arr: T[], n: number): T[][] {
   const out: T[][] = [];
@@ -390,13 +393,22 @@ async function main(): Promise<void> {
   const attempt2FailReasons = new Map<number, string>();
 
   if (failedAfter1.length > 0) {
-    console.log(`[fetch] Retrying ${failedAfter1.length} failed articles (attempt 2, serial batches)…`);
+    // Backoff before retrying: attempt 1 likely just hammered the free LLM tier
+    // into 429s. Give providers a moment to recover before attempt 2.
+    const RETRY_BACKOFF_MS = 8_000;
+    const BATCH_GAP_MS     = 2_000;
+    console.log(
+      `[fetch] Retrying ${failedAfter1.length} failed articles (attempt 2, serial batches) after ${RETRY_BACKOFF_MS / 1000}s backoff…`
+    );
+    await sleep(RETRY_BACKOFF_MS);
 
-    for (const retryBatch of chunk(failedAfter1, BATCH_SIZE)) {
+    const retryBatches = chunk(failedAfter1, BATCH_SIZE);
+    for (let b = 0; b < retryBatches.length; b++) {
       const { results: retryResults, failReasons: batchFailReasons } =
-        await summarizeBatch(retryBatch.map(toBatchInput), 2);
+        await summarizeBatch(retryBatches[b].map(toBatchInput), 2);
       retryResults.forEach((s, id) => allSummaries.set(id, s));
       batchFailReasons.forEach((r, id) => attempt2FailReasons.set(id, r));
+      if (b < retryBatches.length - 1) await sleep(BATCH_GAP_MS); // ease off between batches
     }
 
     // Log anything still failing after both attempts

@@ -1,8 +1,8 @@
 import { generateText } from './llm';
 
 const MODEL_ID = 'gemini-2.5-flash';
-const LLM_TIMEOUT_MS        = 30_000; // attempt 1 — Gemini is fast
-const LLM_TIMEOUT_MS_RETRY  = 60_000; // attempt 2 — OpenRouter free can be slow
+const LLM_TIMEOUT_MS        = 45_000; // attempt 1 — Gemini is fast, but a fallback to OpenRouter needs slack
+const LLM_TIMEOUT_MS_RETRY  = 60_000; // attempt 2 — OpenRouter free/paid can be slow
 
 export interface HebrewSummary {
   title_he: string;
@@ -52,6 +52,42 @@ ${list}
 חובה להחזיר תוצאה לכל ID.`;
 }
 
+/**
+ * Recover complete result objects from a truncated/partial JSON response.
+ * Scans char-by-char honouring JSON string escaping — so Hebrew gershayim
+ * (e.g. צה"ל, ארה"ב) that appear escaped as \" inside a string do NOT break
+ * extraction. Only the final incomplete object (if truncated) is dropped.
+ */
+function recoverResultObjects(text: string): unknown[] {
+  const out: unknown[] = [];
+  const resultsAt = text.indexOf('"results"');
+  const from = resultsAt >= 0 ? text.indexOf('[', resultsAt) : 0;
+  let i = from >= 0 ? from : 0;
+  const n = text.length;
+
+  while (i < n) {
+    if (text[i] !== '{') { i++; continue; }
+
+    let depth = 0, inStr = false, esc = false, j = i, closed = false;
+    for (; j < n; j++) {
+      const ch = text[j];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (ch === '\\') esc = true;
+        else if (ch === '"') inStr = false;
+      } else if (ch === '"') inStr = true;
+      else if (ch === '{') depth++;
+      else if (ch === '}') { depth--; if (depth === 0) { j++; closed = true; break; } }
+    }
+
+    if (!closed) break; // truncated final object — stop
+    try { out.push(JSON.parse(text.slice(i, j))); } catch {}
+    i = j;
+  }
+
+  return out;
+}
+
 function extractItems(
   raw: string
 ): Array<{ id?: number; title_he?: string; summary_he?: string }> {
@@ -73,15 +109,14 @@ function extractItems(
     } catch {}
   }
 
-  // 3. JSON truncated — extract individual result objects that parsed cleanly
-  const recovered: Array<{ id?: number; title_he?: string; summary_he?: string }> = [];
-  const itemRegex = /\{\s*"id"\s*:\s*(\d+)\s*,\s*"title_he"\s*:\s*"([^"\\]*)"\s*,\s*"summary_he"\s*:\s*"([^"\\]*)"\s*\}/g;
-  let m: RegExpExecArray | null;
-  while ((m = itemRegex.exec(cleaned)) !== null) {
-    recovered.push({ id: Number(m[1]), title_he: m[2], summary_he: m[3] });
-  }
+  // 3. JSON truncated — recover complete objects via escaping-aware brace scan
+  const recovered = recoverResultObjects(cleaned) as Array<{
+    id?: number;
+    title_he?: string;
+    summary_he?: string;
+  }>;
   if (recovered.length > 0) {
-    console.warn(`[gemini] Partial JSON — recovered ${recovered.length} items via regex`);
+    console.warn(`[gemini] Partial JSON — recovered ${recovered.length} items via brace scan`);
     return recovered;
   }
 
