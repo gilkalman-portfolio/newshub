@@ -94,6 +94,10 @@ export default function NewsGrid({ articles }: Props) {
   const pillRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  // Focus management for slide panel
+  const panelCloseRef = useRef<HTMLButtonElement>(null);
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
+
   const handleRefresh = useCallback(async () => {
     if (refreshing) return;
     setRefreshing(true);
@@ -107,6 +111,7 @@ export default function NewsGrid({ articles }: Props) {
   }, [refreshing, router]);
 
   const openPanel = useCallback((article: Article) => {
+    lastFocusedRef.current = document.activeElement as HTMLElement | null;
     setSelectedArticle(article);
     document.body.style.overflow = 'hidden';
   }, []);
@@ -114,6 +119,7 @@ export default function NewsGrid({ articles }: Props) {
   const closePanel = useCallback(() => {
     setSelectedArticle(null);
     document.body.style.overflow = '';
+    lastFocusedRef.current?.focus();
   }, []);
 
   // Escape key closes panel
@@ -124,6 +130,13 @@ export default function NewsGrid({ articles }: Props) {
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [closePanel]);
+
+  // Move focus to the close button when the panel opens
+  useEffect(() => {
+    if (selectedArticle) {
+      panelCloseRef.current?.focus();
+    }
+  }, [selectedArticle]);
 
   // Animate sliding pill — runs on mount (no transition) and on every change (with transition)
   useEffect(() => {
@@ -370,6 +383,7 @@ export default function NewsGrid({ articles }: Props) {
               : ''}
           </span>
           <button
+            ref={panelCloseRef}
             className="panel-close"
             onClick={closePanel}
             aria-label="סגור"
