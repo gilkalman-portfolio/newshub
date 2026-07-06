@@ -175,6 +175,12 @@ header {
   color: #dc2626;
   background: #fef2f2;
 }
+.refresh-error-msg {
+  font-family: var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: #dc2626;
+  white-space: nowrap;
+}
 
 .runs-link {
   font-family: var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace;

@@ -85,6 +85,7 @@ export default function NewsGrid({ articles }: Props) {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [scrollPct, setScrollPct] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
   const [regionFilter, setRegionFilter] = useState<RegionFilter>('all');
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -97,10 +98,15 @@ export default function NewsGrid({ articles }: Props) {
   const handleRefresh = useCallback(async () => {
     if (refreshing) return;
     setRefreshing(true);
+    setRefreshError(null);
     try {
       const { refreshedAt } = await refreshNews();
       setLastRefresh(refreshedAt);
       router.refresh();
+    } catch (err) {
+      console.error('refreshNews failed:', err);
+      setRefreshError('הרענון נכשל, נסה שוב');
+      setTimeout(() => setRefreshError(null), 5000);
     } finally {
       setRefreshing(false);
     }
@@ -180,7 +186,9 @@ export default function NewsGrid({ articles }: Props) {
       try {
         const res = await fetch('/api/quotes?limit=5');
         if (res.ok) setQuotes(await res.json());
-      } catch {}
+      } catch (err) {
+        console.error('fetchQuotes failed:', err);
+      }
     };
     fetchQuotes();
     const interval = setInterval(fetchQuotes, 15 * 60 * 1000);
@@ -216,7 +224,7 @@ export default function NewsGrid({ articles }: Props) {
             <span className="refresh-label">מניות</span>
           </Link>
           <button
-            className={`refresh-btn${refreshing ? ' refreshing' : ''}`}
+            className={`refresh-btn${refreshing ? ' refreshing' : ''}${refreshError ? ' refresh-err' : ''}`}
             onClick={handleRefresh}
             disabled={refreshing}
             title={lastRefresh ? `עודכן: ${new Date(lastRefresh).toLocaleTimeString('he-IL')}` : 'רענן כתבות'}
@@ -225,6 +233,9 @@ export default function NewsGrid({ articles }: Props) {
             <span className="refresh-icon" aria-hidden="true">↻</span>
             <span className="refresh-label">{refreshing ? 'מרענן…' : 'רענן'}</span>
           </button>
+          {refreshError && (
+            <span className="refresh-error-msg" role="alert">{refreshError}</span>
+          )}
           <div className="status-pill">
             <div className="status-dot ok" />
             <span className="status-txt">{totalArticles} כתבות</span>
