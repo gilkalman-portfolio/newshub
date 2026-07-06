@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Metadata } from 'next';
 import type { Quote } from '@/lib/types';
 import { INVESTOR_CONFIG } from '@/lib/types';
+import { cleanQuoteText, isDisplayableQuote } from '@/lib/quotes-display';
 import Link from 'next/link';
 
 export const revalidate = 900; // 15 minutes
@@ -27,7 +28,7 @@ async function fetchQuotes(): Promise<Quote[]> {
     console.error('[quotes page] fetch error:', error.message);
     return [];
   }
-  return data as Quote[];
+  return (data as Quote[]).filter((q) => isDisplayableQuote(q.text));
 }
 
 function relativeTimeHe(dateStr: string | null): string {
@@ -120,7 +121,7 @@ export default async function QuotesPage() {
                 </div>
 
                 <p style={{ fontSize: 15, color: 'var(--text-body)', lineHeight: 1.6, marginBottom: 10 }}>
-                  {quote.text}
+                  {cleanQuoteText(quote.text)}
                 </p>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid var(--border)' }}>
