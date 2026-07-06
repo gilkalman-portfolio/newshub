@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { Article, Category, Quote } from '@/lib/types';
 import { refreshNews } from '@/app/actions';
 import { CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS } from '@/lib/types';
+import { isDisplayableQuote } from '@/lib/quotes-display';
 import NewsItem from './NewsItem';
 import QuoteItem from './QuoteItem';
 
@@ -179,7 +180,10 @@ export default function NewsGrid({ articles }: Props) {
     const fetchQuotes = async () => {
       try {
         const res = await fetch('/api/quotes?limit=5');
-        if (res.ok) setQuotes(await res.json());
+        if (res.ok) {
+          const data: Quote[] = await res.json();
+          setQuotes(data.filter((q) => isDisplayableQuote(q.text)));
+        }
       } catch {}
     };
     fetchQuotes();
