@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import type { Quote } from '@/lib/types';
 import { INVESTOR_CONFIG } from '@/lib/types';
 import { cleanQuoteText, isDisplayableQuote } from '@/lib/quotes-display';
+import { isLatin } from '@/lib/text';
 import Link from 'next/link';
 
 export const revalidate = 900; // 15 minutes
@@ -120,7 +121,13 @@ export default async function QuotesPage() {
                   </span>
                 </div>
 
-                <p style={{ fontSize: 15, color: 'var(--text-body)', lineHeight: 1.6, marginBottom: 10 }}>
+                <p
+                  dir={isLatin(quote.text) ? 'ltr' : undefined}
+                  style={{
+                    fontSize: 15, color: 'var(--text-body)', lineHeight: 1.6, marginBottom: 10,
+                    ...(isLatin(quote.text) ? { textAlign: 'left' } : {}),
+                  }}
+                >
                   {cleanQuoteText(quote.text)}
                 </p>
 
