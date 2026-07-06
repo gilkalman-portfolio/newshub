@@ -589,6 +589,11 @@ header {
 }
 
 .panel-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   color: var(--text-muted);
@@ -690,6 +695,12 @@ header {
   .grid { grid-template-columns: 1fr; }
   .col::after { display: none; }
   .panel { width: 100%; }
+
+  /* Touch targets: bump vertical padding so controls reach ~44px height */
+  .refresh-btn { padding: 14px 14px; }
+  .region-btn { padding: 14px 16px; }
+  .cat-tab { padding: 14px 14px; }
+  .status-pill { padding: 13px 12px; }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -965,6 +976,11 @@ header {
 }
 
 .stock-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   color: var(--text-muted);
