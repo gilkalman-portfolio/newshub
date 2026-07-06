@@ -1,5 +1,6 @@
 import type { Quote } from '@/lib/types';
 import { INVESTOR_CONFIG } from '@/lib/types';
+import { isLatin } from '@/lib/text';
 
 interface Props {
   quote: Quote;
@@ -60,7 +61,13 @@ export default function QuoteItem({ quote, animationDelay }: Props) {
         <span className="quote-x-badge" aria-label="X / Twitter">✕</span>
       </div>
 
-      <div className="quote-text">{quote.text}</div>
+      <div
+        className="quote-text"
+        dir={isLatin(quote.text) ? 'ltr' : undefined}
+        style={isLatin(quote.text) ? { textAlign: 'left' } : undefined}
+      >
+        {quote.text}
+      </div>
 
       <div className="item-footer">
         <span className="quote-firm">{quote.author_firm}</span>

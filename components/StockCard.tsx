@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { StockData } from '@/app/api/stocks/route';
 import type { StockTwit } from '@/app/api/twits/route';
+import { isLatin } from '@/lib/text';
 
 function relTime(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -141,7 +142,13 @@ export default function StockCard({ data, twits, onRemove }: Props) {
           >
             <SentimentDot s={item.sentiment} />
             <div className="stock-news-text">
-              <span className="stock-news-title">{item.title}</span>
+              <span
+                className="stock-news-title"
+                dir={isLatin(item.title) ? 'ltr' : undefined}
+                style={isLatin(item.title) ? { textAlign: 'left' } : undefined}
+              >
+                {item.title}
+              </span>
               <span className="stock-news-meta">
                 {item.publisher.name} · {relTime(item.published_utc)}
               </span>
@@ -225,7 +232,13 @@ export default function StockCard({ data, twits, onRemove }: Props) {
                   <span className="twit-user">@{twit.username}</span>
                   <span className="twit-time">{relTime(twit.createdAt)}</span>
                 </div>
-                <p className="twit-body">{twit.body}</p>
+                <p
+                  className="twit-body"
+                  dir={isLatin(twit.body) ? 'ltr' : undefined}
+                  style={isLatin(twit.body) ? { textAlign: 'left' } : undefined}
+                >
+                  {twit.body}
+                </p>
                 <div className="twit-footer">
                   <TwitSentimentBadge s={twit.sentiment} />
                   {twit.priceTarget && (
