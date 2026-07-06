@@ -690,6 +690,8 @@ header {
   .grid { grid-template-columns: 1fr; }
   .col::after { display: none; }
   .panel { width: 100%; }
+  .header-center { display: none; }
+  .status-txt { white-space: nowrap; }
 }
 
 /* ═══════════════════════════════════════════════════════════
