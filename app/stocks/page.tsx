@@ -184,6 +184,7 @@ export default function StocksPage() {
           <input
             className="stocks-input"
             placeholder="הוסף טיקר — לדוגמה: MSFT"
+            aria-label="הוסף טיקר"
             value={input}
             onChange={e => setInput(e.target.value.toUpperCase())}
             onKeyDown={e => e.key === 'Enter' && addTicker()}
