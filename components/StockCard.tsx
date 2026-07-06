@@ -112,7 +112,7 @@ export default function StockCard({ data, twits, onRemove }: Props) {
             </span>
           )}
           {!snapshot && (
-            <span className="stock-badge" style={{ color: '#9CA3AF', background: '#F3F4F6' }}>
+            <span className="stock-badge" style={{ color: '#4B5563', background: '#F3F4F6' }}>
               אין נתונים
             </span>
           )}
