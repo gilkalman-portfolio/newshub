@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { Article, Category } from '@/lib/types';
-import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/lib/types';
+import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '@/lib/types';
 import NewsItem from './NewsItem';
 
 interface Props {
@@ -12,14 +12,6 @@ interface Props {
   color: string;
   articles: Article[];
 }
-
-const ALL_CATEGORIES: Category[] = [
-  'ai-builders',
-  'tech',
-  'economy',
-  'news',
-  'sports',
-];
 
 function relativeTimeHe(dateStr: string): string {
   const now = Date.now();

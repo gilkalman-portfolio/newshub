@@ -11,25 +11,17 @@ import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import type { Article, Category } from '@/lib/types';
-import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/lib/types';
+import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '@/lib/types';
 import CategoryPage from '@/components/CategoryPage';
 
 export const revalidate = 300;
-
-const VALID_CATEGORIES: Category[] = [
-  'ai-builders',
-  'tech',
-  'economy',
-  'news',
-  'sports',
-];
 
 // ---------------------------------------------------------------------------
 // Static params — pre-render all 5 category pages at build time
 // ---------------------------------------------------------------------------
 
 export function generateStaticParams() {
-  return VALID_CATEGORIES.map((slug) => ({ slug }));
+  return ALL_CATEGORIES.map((slug) => ({ slug }));
 }
 
 // ---------------------------------------------------------------------------
@@ -44,7 +36,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const cat = slug as Category;
 
-  if (!VALID_CATEGORIES.includes(cat)) return {};
+  if (!ALL_CATEGORIES.includes(cat)) return {};
 
   const label = CATEGORY_LABELS[cat];
   return {
@@ -92,7 +84,7 @@ export default async function CategorySlugPage({
   const { slug } = await params;
   const cat = slug as Category;
 
-  if (!VALID_CATEGORIES.includes(cat)) notFound();
+  if (!ALL_CATEGORIES.includes(cat)) notFound();
 
   const articles = await fetchCategoryArticles(cat);
   const color = CATEGORY_COLORS[cat];

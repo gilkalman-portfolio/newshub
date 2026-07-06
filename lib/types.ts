@@ -23,6 +23,8 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   'qa-testing': 'QA & Testing',
 };
 
+export const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS) as Category[];
+
 export const CATEGORY_ICONS: Record<Category, string> = {
   'ai-builders': '🤖',
   'tech':        '💻',
