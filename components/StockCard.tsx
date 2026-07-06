@@ -131,7 +131,7 @@ export default function StockCard({ data, twits, twitsLoading, twitsError, onRem
       <div className="stock-card-divider" />
 
       {/* News list */}
-      <div className="stock-section-label">📰 חדשות</div>
+      <div className="stock-section-label"><span aria-hidden="true">📰</span> חדשות</div>
       <div className="stock-news-list">
         {news.length === 0 && <p className="stock-no-news">אין חדשות זמינות</p>}
         {news.map((item) => (
@@ -164,7 +164,7 @@ export default function StockCard({ data, twits, twitsLoading, twitsError, onRem
         <>
           <div className="stock-card-divider" />
           <div className="stock-section-label">
-            💬 StockTwits
+            <span aria-hidden="true">💬</span> StockTwits
             {bullPct !== null && (
               <span className="twits-sentiment-bar-label">
                 <span style={{ color: '#16A34A' }}>🐂 {bullPct}%</span>
@@ -257,7 +257,7 @@ export default function StockCard({ data, twits, twitsLoading, twitsError, onRem
       {twits.length === 0 && (
         <>
           <div className="stock-card-divider" />
-          <div className="stock-section-label">💬 StockTwits</div>
+          <div className="stock-section-label"><span aria-hidden="true">💬</span> StockTwits</div>
           {twitsLoading && <p className="stock-no-news">טוען...</p>}
           {!twitsLoading && twitsError && (
             <p className="stock-no-news">⚠ שגיאה בטעינת StockTwits</p>

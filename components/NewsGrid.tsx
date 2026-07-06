@@ -238,7 +238,7 @@ export default function NewsGrid({ articles }: Props) {
         <span className="header-center">{formatHebrewDate(new Date())}</span>
         <div className="header-right">
           <Link href="/stocks" className="refresh-btn" title="תיק המניות שלי">
-            <span className="refresh-icon" style={{ fontSize: 14 }}>📈</span>
+            <span className="refresh-icon" style={{ fontSize: 14 }} aria-hidden="true">📈</span>
             <span className="refresh-label">מניות</span>
           </Link>
           <button
@@ -302,7 +302,7 @@ export default function NewsGrid({ articles }: Props) {
                   style={{ textDecoration: 'none' }}
                   title={`כל כתבות ${label}`}
                 >
-                  <span className="cat-icon">{icon}</span>
+                  <span className="cat-icon" aria-hidden="true">{icon}</span>
                   {label} ›
                 </Link>
                 <div className="cat-line" />
@@ -349,7 +349,7 @@ export default function NewsGrid({ articles }: Props) {
               style={{ textDecoration: 'none' }}
               title="כל הציטוטים"
             >
-              <span className="cat-icon">💬</span>
+              <span className="cat-icon" aria-hidden="true">💬</span>
               QUOTES ›
             </Link>
             <div className="cat-line" />

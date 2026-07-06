@@ -164,7 +164,7 @@ export default function StocksPage() {
             onClick={manualRefresh}
             disabled={refreshing || loading}
           >
-            <span className="refresh-icon">
+            <span className="refresh-icon" aria-hidden="true">
               {refreshStatus === 'ok' ? '✓' : refreshStatus === 'err' ? '✗' : '↻'}
             </span>
             <span className="refresh-label">
