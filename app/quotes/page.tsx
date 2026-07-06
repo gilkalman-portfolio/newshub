@@ -58,6 +58,7 @@ export default async function QuotesPage() {
   return (
     <>
       <header>
+        <h1 className="sr-only">ציטוטי משקיעים</h1>
         <Link href="/" className="logo" style={{ textDecoration: 'none' }}>
           NewsHUB
         </Link>

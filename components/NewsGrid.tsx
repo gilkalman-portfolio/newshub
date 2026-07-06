@@ -233,6 +233,7 @@ export default function NewsGrid({ articles }: Props) {
 
       {/* Header */}
       <header>
+        <h1 className="sr-only">NewsHUB — חדשות יומיות בעברית</h1>
         <span className="logo">NewsHUB</span>
         <span className="header-center">{formatHebrewDate(new Date())}</span>
         <div className="header-right">
