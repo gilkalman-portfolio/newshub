@@ -46,10 +46,12 @@ function TwitSentimentBadge({ s }: { s: 'Bullish' | 'Bearish' | null }) {
 interface Props {
   data:  StockData;
   twits: StockTwit[];
+  twitsLoading?: boolean;
+  twitsError?: string | null;
   onRemove: (ticker: string) => void;
 }
 
-export default function StockCard({ data, twits, onRemove }: Props) {
+export default function StockCard({ data, twits, twitsLoading, twitsError, onRemove }: Props) {
   const { ticker, snapshot, news } = data;
   const up   = (snapshot?.changePerc ?? 0) >= 0;
   const pct  = snapshot ? `${up ? '+' : ''}${snapshot.changePerc.toFixed(2)}%` : '—';
@@ -238,12 +240,18 @@ export default function StockCard({ data, twits, onRemove }: Props) {
         </>
       )}
 
-      {/* StockTwits loading/empty */}
+      {/* StockTwits loading/empty/error */}
       {twits.length === 0 && (
         <>
           <div className="stock-card-divider" />
           <div className="stock-section-label">💬 StockTwits</div>
-          <p className="stock-no-news">טוען...</p>
+          {twitsLoading && <p className="stock-no-news">טוען...</p>}
+          {!twitsLoading && twitsError && (
+            <p className="stock-no-news">⚠ שגיאה בטעינת StockTwits</p>
+          )}
+          {!twitsLoading && !twitsError && (
+            <p className="stock-no-news">אין ציוצים</p>
+          )}
         </>
       )}
     </div>

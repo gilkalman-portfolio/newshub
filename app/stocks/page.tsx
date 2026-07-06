@@ -30,6 +30,7 @@ export default function StocksPage() {
   const [data, setData]               = useState<StockData[]>([]);
   const [twitsMap, setTwitsMap]       = useState<Record<string, StockTwit[]>>({});
   const [twitsLoading, setTwitsLoading] = useState(false);
+  const [twitsError, setTwitsError]   = useState<string | null>(null);
   const [loading, setLoading]         = useState(false);
   const [refreshing, setRefreshing]   = useState(false);
   const [refreshStatus, setRefreshStatus] = useState<'idle' | 'ok' | 'err'>('idle');
@@ -78,14 +79,17 @@ export default function StocksPage() {
   const fetchTwits = useCallback(async (tickers: string[]) => {
     if (!tickers.length) return;
     setTwitsLoading(true);
+    setTwitsError(null);
     try {
       const res  = await fetch(`/api/twits?tickers=${tickers.join(',')}`);
+      if (!res.ok) throw new Error('שגיאה בטעינת StockTwits');
       const json: TwitsResult[] = await res.json();
       const map: Record<string, StockTwit[]> = {};
       for (const item of json) map[item.ticker] = item.twits;
       setTwitsMap(prev => ({ ...prev, ...map }));
-    } catch (e) {
+    } catch (e: any) {
       console.error('[twits] fetch error', e);
+      setTwitsError(e.message ?? 'שגיאה בטעינת StockTwits');
     } finally {
       setTwitsLoading(false);
     }
@@ -216,6 +220,8 @@ export default function StocksPage() {
                 key={ticker}
                 data={d}
                 twits={twitsMap[ticker] ?? []}
+                twitsLoading={twitsLoading}
+                twitsError={twitsError}
                 onRemove={removeTicker}
               />
             );
