@@ -255,7 +255,7 @@ header {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(5, 1fr) 0.7fr;
+  grid-template-columns: repeat(6, 1fr) 0.7fr;
   min-height: calc(100vh - var(--header-h));
 }
 
