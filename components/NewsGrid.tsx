@@ -271,6 +271,7 @@ export default function NewsGrid({ articles }: Props) {
               ref={(el) => { btnRefs.current[idx] = el; }}
               className={`region-btn${regionFilter === id ? ' active' : ''}`}
               onClick={() => setRegionFilter(id)}
+              aria-pressed={regionFilter === id}
             >
               {label}
             </button>

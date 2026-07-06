@@ -140,6 +140,7 @@ export default function CategoryPage({ category, label, color, articles }: Props
                 key={cat}
                 href={`/category/${cat}`}
                 className={`cat-tab${isActive ? ' active' : ''}`}
+                aria-current={isActive ? 'page' : undefined}
                 style={
                   isActive
                     ? { color: catColor, borderColor: catColor, background: catColor + '18' }
