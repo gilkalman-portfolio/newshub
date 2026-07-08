@@ -55,7 +55,7 @@ export default async function QuotesPage() {
         </div>
       </header>
 
-      <main style={{ maxWidth: 860, margin: '0 auto', padding: '24px 20px', direction: 'rtl' }}>
+      <main style={{ maxWidth: 860, margin: '0 auto', padding: '24px 20px' }}>
         {quotes.length === 0 && (
           <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 60, fontSize: 14 }}>
             אין ציטוטים עדיין — הרץ את ה-POST /api/quotes כדי לטעון מ-X
