@@ -35,12 +35,12 @@ export const CATEGORY_ICONS: Record<Category, string> = {
 };
 
 export const CATEGORY_COLORS: Record<Category, string> = {
-  'ai-builders': '#A855F7',
-  'tech': '#06B6D4',
-  'economy': '#10B981',
-  'news': '#F97316',
-  'sports': '#EC4899',
-  'qa-testing': '#3B82F6',
+  'ai-builders': '#7C3AED',
+  'tech': '#0891B2',
+  'economy': '#16A34A',
+  'news': '#EA580C',
+  'sports': '#DB2777',
+  'qa-testing': '#2563EB',
 };
 
 // RSS source definition
