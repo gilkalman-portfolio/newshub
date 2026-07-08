@@ -1109,6 +1109,11 @@ header {
   transform: translateY(-2px);
 }
 
+/* Error state */
+.stock-card-error {
+  opacity: 0.75;
+}
+
 /* Skeleton */
 .stock-card-skeleton {
   padding: 20px;

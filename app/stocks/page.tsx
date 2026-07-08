@@ -216,7 +216,23 @@ export default function StocksPage() {
                 </div>
               );
             }
-            if (!d) return null;
+            if (!d) {
+              return (
+                <div key={ticker} className="stock-card stock-card-error">
+                  <div className="stock-card-head">
+                    <div className="stock-card-ticker-row">
+                      <span className="stock-ticker">{ticker}</span>
+                      <button
+                        className="stock-remove-btn"
+                        onClick={() => removeTicker(ticker)}
+                        title="הסר מניה"
+                      >×</button>
+                    </div>
+                  </div>
+                  <p className="stock-no-news">⚠ שגיאה בטעינה</p>
+                </div>
+              );
+            }
             return (
               <StockCard
                 key={ticker}
