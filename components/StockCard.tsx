@@ -16,9 +16,9 @@ function relTime(iso: string): string {
 
 function SentimentDot({ s }: { s?: string | null }) {
   const color =
-    s === 'positive' || s === 'Bullish' ? '#16A34A' :
-    s === 'negative' || s === 'Bearish' ? '#DC2626' :
-    '#9CA3AF';
+    s === 'positive' || s === 'Bullish' ? 'var(--bull)' :
+    s === 'negative' || s === 'Bearish' ? 'var(--bear)' :
+    'var(--neutral)';
   return (
     <span
       title={s ?? 'neutral'}
@@ -57,8 +57,8 @@ export default function StockCard({ data, twits, twitsLoading, twitsError, onRem
   const up   = (snapshot?.changePerc ?? 0) >= 0;
   const pct  = snapshot ? `${up ? '+' : ''}${snapshot.changePerc.toFixed(2)}%` : '—';
   const price = snapshot ? `$${snapshot.price.toFixed(2)}` : '—';
-  const changeColor = up ? '#16A34A' : '#DC2626';
-  const changeBg    = up ? '#DCFCE7' : '#FEE2E2';
+  const changeColor = up ? 'var(--bull)' : 'var(--bear)';
+  const changeBg    = up ? 'var(--bull-bg)' : 'var(--bear-bg)';
 
   // StockTwits sentiment summary
   // Require at least 3 explicitly tagged posts — otherwise the bar is statistically misleading
@@ -167,13 +167,13 @@ export default function StockCard({ data, twits, twitsLoading, twitsError, onRem
             <span aria-hidden="true">💬</span> StockTwits
             {bullPct !== null && (
               <span className="twits-sentiment-bar-label">
-                <span style={{ color: '#16A34A' }}>🐂 {bullPct}%</span>
+                <span style={{ color: 'var(--bull)' }}>🐂 {bullPct}%</span>
                 {' · '}
-                <span style={{ color: '#DC2626' }}>🐻 {100 - bullPct}%</span>
+                <span style={{ color: 'var(--bear)' }}>🐻 {100 - bullPct}%</span>
               </span>
             )}
             {bullPct === null && totalSentiment > 0 && (
-              <span className="twits-sentiment-bar-label" style={{ color: '#9CA3AF' }}>
+              <span className="twits-sentiment-bar-label" style={{ color: 'var(--neutral)' }}>
                 ({totalSentiment} תגיות — אין מספיק לבר)
               </span>
             )}

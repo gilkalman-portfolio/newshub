@@ -39,6 +39,14 @@
   --cat-sport:  #DB2777;
   --cat-qa:     #2563EB;
 
+  --bull:       #16A34A;
+  --bull-text:  #15803D;
+  --bull-bg:    #DCFCE7;
+  --bear:       #DC2626;
+  --bear-text:  #B91C1C;
+  --bear-bg:    #FEE2E2;
+  --neutral:    #9CA3AF;
+
   --panel-w:    440px;
   --header-h:   52px;
   --subnav-h:   42px;
@@ -1175,8 +1183,8 @@ header {
   overflow: hidden;
   background: var(--surface-2);
 }
-.twits-bar-bull { background: #16A34A; transition: width 0.6s ease; }
-.twits-bar-bear { background: #DC2626; transition: width 0.6s ease; }
+.twits-bar-bull { background: var(--bull); transition: width 0.6s ease; }
+.twits-bar-bear { background: var(--bear); transition: width 0.6s ease; }
 
 /* Twits list */
 .stock-twits-list {
@@ -1237,8 +1245,8 @@ header {
   border-radius: 20px;
   font-family: var(--font-ibm-plex-mono), monospace;
 }
-.twit-badge-bull { background: #DCFCE7; color: #15803D; }
-.twit-badge-bear { background: #FEE2E2; color: #B91C1C; }
+.twit-badge-bull { background: var(--bull-bg); color: var(--bull-text); }
+.twit-badge-bear { background: var(--bear-bg); color: var(--bear-text); }
 
 .twit-price-target {
   font-family: var(--font-ibm-plex-mono), monospace;
