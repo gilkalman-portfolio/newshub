@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import type { StockData } from '@/app/api/stocks/route';
 import type { TwitsResult, StockTwit } from '@/app/api/twits/route';
 import StockCard from '@/components/StockCard';
+import SiteHeader from '@/components/SiteHeader';
 
 const STORAGE_KEY      = 'newshub_watchlist';
 const DEFAULT_TICKERS  = ['AAPL', 'NVDA', 'TSLA'];
@@ -150,34 +150,35 @@ export default function StocksPage() {
 
   return (
     <>
-      <header>
-        <Link href="/" className="logo" style={{ textDecoration: 'none' }}>NewsHUB</Link>
-        <span className="header-center">תיק המניות שלי</span>
-        <div className="header-right">
-          {twitsLoading && (
-            <span className="status-txt" style={{ fontSize: 10, color: '#7C3AED' }}>
-              💬 טוען StockTwits...
-            </span>
-          )}
-          <button
-            className={`refresh-btn${refreshing ? ' refreshing' : ''}${refreshStatus === 'ok' ? ' refresh-ok' : ''}${refreshStatus === 'err' ? ' refresh-err' : ''}`}
-            onClick={manualRefresh}
-            disabled={refreshing || loading}
-          >
-            <span className="refresh-icon" aria-hidden="true">
-              {refreshStatus === 'ok' ? '✓' : refreshStatus === 'err' ? '✗' : '↻'}
-            </span>
-            <span className="refresh-label">
-              {refreshing ? 'טוען...' : refreshStatus === 'ok' ? 'עודכן' : refreshStatus === 'err' ? 'שגיאה' : 'רענן'}
-            </span>
-          </button>
-          {lastUpdated && (
-            <span className="status-txt" style={{ fontSize: 10 }}>
-              עודכן {lastUpdated.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
-        </div>
-      </header>
+      <SiteHeader
+        center="תיק המניות שלי"
+        right={
+          <>
+            {twitsLoading && (
+              <span className="status-txt" style={{ fontSize: 10, color: '#7C3AED' }}>
+                💬 טוען StockTwits...
+              </span>
+            )}
+            <button
+              className={`refresh-btn${refreshing ? ' refreshing' : ''}${refreshStatus === 'ok' ? ' refresh-ok' : ''}${refreshStatus === 'err' ? ' refresh-err' : ''}`}
+              onClick={manualRefresh}
+              disabled={refreshing || loading}
+            >
+              <span className="refresh-icon" aria-hidden="true">
+                {refreshStatus === 'ok' ? '✓' : refreshStatus === 'err' ? '✗' : '↻'}
+              </span>
+              <span className="refresh-label">
+                {refreshing ? 'טוען...' : refreshStatus === 'ok' ? 'עודכן' : refreshStatus === 'err' ? 'שגיאה' : 'רענן'}
+              </span>
+            </button>
+            {lastUpdated && (
+              <span className="status-txt" style={{ fontSize: 10 }}>
+                עודכן {lastUpdated.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </>
+        }
+      />
 
       <main className="stocks-page">
         <div className="stocks-add-row">

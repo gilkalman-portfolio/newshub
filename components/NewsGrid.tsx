@@ -10,6 +10,7 @@ import { isDisplayableQuote } from '@/lib/quotes-display';
 import { relativeTimeHe, formatHebrewDate } from '@/lib/time';
 import NewsItem from './NewsItem';
 import QuoteItem from './QuoteItem';
+import SiteHeader from './SiteHeader';
 
 type RegionFilter = 'all' | 'israel' | 'world';
 
@@ -217,34 +218,36 @@ export default function NewsGrid({ articles }: Props) {
       />
 
       {/* Header */}
-      <header>
-        <h1 className="sr-only">NewsHUB — חדשות יומיות בעברית</h1>
-        <span className="logo">NewsHUB</span>
-        <span className="header-center">{formatHebrewDate(new Date())}</span>
-        <div className="header-right">
-          <Link href="/stocks" className="refresh-btn" title="תיק המניות שלי">
-            <span className="refresh-icon" style={{ fontSize: 14 }} aria-hidden="true">📈</span>
-            <span className="refresh-label">מניות</span>
-          </Link>
-          <button
-            className={`refresh-btn${refreshing ? ' refreshing' : ''}${refreshError ? ' refresh-err' : ''}`}
-            onClick={handleRefresh}
-            disabled={refreshing}
-            title={lastRefresh ? `עודכן: ${new Date(lastRefresh).toLocaleTimeString('he-IL')}` : 'רענן כתבות'}
-            aria-label="רענן כתבות"
-          >
-            <span className="refresh-icon" aria-hidden="true">↻</span>
-            <span className="refresh-label">{refreshing ? 'מרענן…' : 'רענן'}</span>
-          </button>
-          {refreshError && (
-            <span className="refresh-error-msg" role="alert">{refreshError}</span>
-          )}
-          <div className="status-pill">
-            <div className="status-dot ok" />
-            <span className="status-txt">{totalArticles} כתבות</span>
-          </div>
-        </div>
-      </header>
+      <SiteHeader
+        srTitle="NewsHUB — חדשות יומיות בעברית"
+        logoAsLink={false}
+        center={formatHebrewDate(new Date())}
+        right={
+          <>
+            <Link href="/stocks" className="refresh-btn" title="תיק המניות שלי">
+              <span className="refresh-icon" style={{ fontSize: 14 }} aria-hidden="true">📈</span>
+              <span className="refresh-label">מניות</span>
+            </Link>
+            <button
+              className={`refresh-btn${refreshing ? ' refreshing' : ''}${refreshError ? ' refresh-err' : ''}`}
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title={lastRefresh ? `עודכן: ${new Date(lastRefresh).toLocaleTimeString('he-IL')}` : 'רענן כתבות'}
+              aria-label="רענן כתבות"
+            >
+              <span className="refresh-icon" aria-hidden="true">↻</span>
+              <span className="refresh-label">{refreshing ? 'מרענן…' : 'רענן'}</span>
+            </button>
+            {refreshError && (
+              <span className="refresh-error-msg" role="alert">{refreshError}</span>
+            )}
+            <div className="status-pill">
+              <div className="status-dot ok" />
+              <span className="status-txt">{totalArticles} כתבות</span>
+            </div>
+          </>
+        }
+      />
 
       {/* Region filter bar */}
       <nav className="region-nav" aria-label="סינון לפי אזור">

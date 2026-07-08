@@ -6,7 +6,7 @@ import { cleanQuoteText, isDisplayableQuote } from '@/lib/quotes-display';
 import { isLatin } from '@/lib/text';
 import { relativeTimeHe } from '@/lib/time';
 import { initials } from '@/lib/string';
-import Link from 'next/link';
+import SiteHeader from '@/components/SiteHeader';
 
 export const revalidate = 900; // 15 minutes
 
@@ -39,21 +39,20 @@ export default async function QuotesPage() {
 
   return (
     <>
-      <header>
-        <h1 className="sr-only">ציטוטי משקיעים</h1>
-        <Link href="/" className="logo" style={{ textDecoration: 'none' }}>
-          NewsHUB
-        </Link>
-        <span className="header-center" style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--neon)' }}>
-          💬 QUOTES
-        </span>
-        <div className="header-right">
+      <SiteHeader
+        srTitle="ציטוטי משקיעים"
+        center={
+          <span style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--neon)' }}>
+            💬 QUOTES
+          </span>
+        }
+        right={
           <div className="status-pill">
             <div className="status-dot ok" />
             <span className="status-txt">{quotes.length} ציטוטים</span>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <main style={{ maxWidth: 860, margin: '0 auto', padding: '24px 20px' }}>
         {quotes.length === 0 && (

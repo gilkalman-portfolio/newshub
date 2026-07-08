@@ -6,6 +6,7 @@ import type { Article, Category } from '@/lib/types';
 import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '@/lib/types';
 import NewsItem from './NewsItem';
 import { relativeTimeHe, formatHebrewDate } from '@/lib/time';
+import SiteHeader from './SiteHeader';
 
 interface Props {
   category: Category;
@@ -86,18 +87,15 @@ export default function CategoryPage({ category, label, color, articles }: Props
       />
 
       {/* Header */}
-      <header>
-        <Link href="/" className="logo" style={{ textDecoration: 'none' }}>
-          NewsHUB
-        </Link>
-        <span className="header-center">{formatHebrewDate(new Date())}</span>
-        <div className="header-right">
+      <SiteHeader
+        center={formatHebrewDate(new Date())}
+        right={
           <div className="status-pill">
             <div className="status-dot ok" style={{ background: color }} />
             <span className="status-txt">{articles.length} כתבות</span>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <main className="cat-page">
         {/* Hero */}
