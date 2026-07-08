@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Article, Category } from '@/lib/types';
 import NewsGrid from '@/components/NewsGrid';
+import { formatHebrewDate } from '@/lib/time';
 
 export const revalidate = 300; // 5-min ISR fallback if on-demand revalidation fails
 
@@ -78,14 +79,4 @@ export default async function HomePage() {
   }
 
   return <NewsGrid articles={articles} />;
-}
-
-// Format today's date in Hebrew style: "ראשון, 26 במאי 2026"
-function formatHebrewDate(date: Date): string {
-  return date.toLocaleDateString('he-IL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
 }
