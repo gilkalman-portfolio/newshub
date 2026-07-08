@@ -54,14 +54,14 @@ export default async function QuotesPage() {
         }
       />
 
-      <main style={{ maxWidth: 860, margin: '0 auto', padding: '24px 20px' }}>
+      <main className="quotes-main">
         {quotes.length === 0 && (
-          <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: 60, fontSize: 14 }}>
+          <p className="quotes-empty">
             אין ציטוטים עדיין — הרץ את ה-POST /api/quotes כדי לטעון מ-X
           </p>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="quotes-list">
           {quotes.map((quote) => {
             const config = INVESTOR_CONFIG[quote.author_handle];
             const color  = config?.color ?? '#4F6EF7';
@@ -80,42 +80,34 @@ export default async function QuotesPage() {
                   borderColor: `color-mix(in srgb, ${color} 20%, var(--border))`,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: '50%',
-                    background: color, display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', fontSize: 12, fontWeight: 700,
-                    color: '#fff', flexShrink: 0,
-                    fontFamily: 'var(--font-space-grotesk)',
-                  }}>
+                <div className="qp-head">
+                  <div className="qp-avatar" style={{ background: color }}>
                     {initials(quote.author_name)}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-hi)' }}>
+                  <div className="qp-author">
+                    <div className="qp-author-name">
                       {quote.author_name}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-ibm-plex-mono)' }}>
+                    <div className="qp-author-handle">
                       @{quote.author_handle} · {quote.author_firm}
                     </div>
                   </div>
-                  <span style={{ fontSize: 10, background: 'var(--text-hi)', color: 'var(--surface)', borderRadius: 3, padding: '2px 5px', fontWeight: 700 }}>
+                  <span className="qp-x-badge">
                     ✕
                   </span>
                 </div>
 
                 <p
                   dir={isLatin(quote.text) ? 'ltr' : undefined}
-                  style={{
-                    fontSize: 15, color: 'var(--text-body)', lineHeight: 1.6, marginBottom: 10,
-                    ...(isLatin(quote.text) ? { textAlign: 'left' } : {}),
-                  }}
+                  className="qp-text"
+                  style={isLatin(quote.text) ? { textAlign: 'left' } : undefined}
                 >
                   {cleanQuoteText(quote.text)}
                 </p>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: 11, color: color, fontWeight: 600 }}>{quote.author_firm}</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-ibm-plex-mono)' }}>
+                <div className="qp-footer">
+                  <span className="qp-firm" style={{ color }}>{quote.author_firm}</span>
+                  <span className="qp-time">
                     {relativeTimeHe(quote.tweeted_at ?? quote.fetched_at)}
                   </span>
                 </div>
