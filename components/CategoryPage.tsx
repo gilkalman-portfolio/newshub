@@ -75,14 +75,22 @@ export default function CategoryPage({ category, label, color, articles }: Props
 
   // Scroll progress bar
   useEffect(() => {
+    let raf = 0;
     const handler = () => {
-      const pct =
-        window.scrollY /
-        Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      setScrollPct(Math.min(pct, 1));
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const pct =
+          window.scrollY /
+          Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        setScrollPct(Math.min(pct, 1));
+      });
     };
     window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
+    return () => {
+      window.removeEventListener('scroll', handler);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   const panelOpen = selectedArticle !== null;
