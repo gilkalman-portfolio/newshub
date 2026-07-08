@@ -47,6 +47,11 @@
   --bear-bg:    #FEE2E2;
   --neutral:    #9CA3AF;
 
+  --radius-sm:   2px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-pill: 20px;
+
   --panel-w:    440px;
   --header-h:   52px;
   --subnav-h:   42px;
@@ -126,7 +131,7 @@ header {
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--border-2);
   background: var(--surface);
 }
@@ -157,7 +162,7 @@ header {
   align-items: center;
   gap: 5px;
   padding: 3px 10px;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--border-2);
   background: var(--surface);
   color: var(--text-muted);
@@ -239,7 +244,7 @@ header {
   align-items: center;
   background: var(--surface-2);
   border: 1px solid var(--border-2);
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   padding: 3px;
   gap: 0;
 }
@@ -375,7 +380,7 @@ header {
   position: relative;
   margin: 0 10px 10px;
   padding: 13px 15px 11px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--cc) 18%, var(--border));
   background: var(--surface);
   box-shadow: 0 1px 4px rgba(0,0,0,0.07), 0 2px 12px color-mix(in srgb, var(--cc) 6%, transparent);
@@ -557,7 +562,7 @@ header {
   text-decoration: none;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 14px 18px;
   transition: transform 0.15s, box-shadow 0.15s;
 }
@@ -687,7 +692,7 @@ header {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-decoration: none;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   transition: all 0.18s;
 }
 .panel-cta:hover {
@@ -826,7 +831,7 @@ header {
 
 .cat-hero-line {
   height: 2px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   opacity: 0.5;
 }
 
@@ -888,7 +893,7 @@ header {
   color: var(--text-muted);
   padding: 5px 12px;
   border: 1px solid var(--border-2);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   transition: all 0.15s;
 }
 .cat-tab:hover {
@@ -933,7 +938,7 @@ header {
   max-width: 280px;
   padding: 9px 14px;
   border: 1px solid var(--border-2);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--text-hi);
   font-family: var(--font-ibm-plex-mono), monospace;
@@ -948,7 +953,7 @@ header {
 .stocks-add-btn {
   padding: 9px 18px;
   border: 1px solid var(--neon);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--neon-dim);
   color: var(--neon);
   font-family: var(--font-space-grotesk), sans-serif;
@@ -967,7 +972,7 @@ header {
 .stocks-error {
   margin-bottom: 20px;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: #FEE2E2;
   color: #991B1B;
   font-size: 14px;
@@ -1083,7 +1088,7 @@ header {
   font-size: 13px;
   font-weight: 600;
   padding: 3px 9px;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
 }
 
 .stock-prev-close {
@@ -1242,7 +1247,7 @@ header {
   font-size: 10px;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   font-family: var(--font-ibm-plex-mono), monospace;
 }
 .twit-badge-bull { background: var(--bull-bg); color: var(--bull-text); }
@@ -1267,7 +1272,7 @@ header {
   color: #fff;
   background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   width: 100%;
   box-shadow: 0 1px 4px rgba(109,40,217,0.25);
@@ -1313,7 +1318,7 @@ header {
 .twits-summary-panel {
   background: linear-gradient(135deg, #F5F3FF 0%, #FAF5FF 100%);
   border: 1px solid #DDD6FE;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 12px 14px;
   margin-bottom: 10px;
 }
