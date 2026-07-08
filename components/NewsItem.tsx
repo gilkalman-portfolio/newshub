@@ -1,27 +1,10 @@
 import type { Article } from '@/lib/types';
+import { relativeTimeHe } from '@/lib/time';
 
 interface Props {
   article: Article;
   onClick: () => void;
   animationDelay: string;
-}
-
-function relativeTimeHe(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  if (isNaN(then)) return '';
-
-  const diffMs = now - then;
-  const diffMins = Math.floor(diffMs / 60_000);
-  const diffHours = Math.floor(diffMs / 3_600_000);
-  const diffDays = Math.floor(diffMs / 86_400_000);
-
-  if (diffMins < 2) return 'עכשיו';
-  if (diffMins < 60) return `לפני ${diffMins} דקות`;
-  if (diffHours === 1) return 'לפני שעה';
-  if (diffHours < 24) return `לפני ${diffHours} שעות`;
-  if (diffDays === 1) return 'אתמול';
-  return `לפני ${diffDays} ימים`;
 }
 
 export default function NewsItem({ article, onClick, animationDelay }: Props) {

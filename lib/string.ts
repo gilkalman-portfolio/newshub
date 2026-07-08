@@ -1,0 +1,8 @@
+// Up to 2 initials from a full name, e.g. "Michael Burry" -> "MB".
+export function initials(name: string): string {
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('');
+}

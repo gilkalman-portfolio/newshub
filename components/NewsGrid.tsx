@@ -7,6 +7,7 @@ import type { Article, Category, Quote } from '@/lib/types';
 import { refreshNews } from '@/app/actions';
 import { CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS } from '@/lib/types';
 import { isDisplayableQuote } from '@/lib/quotes-display';
+import { relativeTimeHe, formatHebrewDate } from '@/lib/time';
 import NewsItem from './NewsItem';
 import QuoteItem from './QuoteItem';
 
@@ -55,30 +56,6 @@ function animDelay(colIdx: number, itemIdx: number): string {
   const base = (colIdx + 1) * 0.08;
   const perItem = itemIdx * 0.08;
   return `${(base + perItem).toFixed(2)}s`;
-}
-
-function formatHebrewDate(date: Date): string {
-  return date.toLocaleDateString('he-IL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function relativeTimeHe(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  if (isNaN(then)) return '';
-  const diffMins = Math.floor((now - then) / 60_000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffMins < 2) return 'עכשיו';
-  if (diffMins < 60) return `לפני ${diffMins} דקות`;
-  if (diffHours === 1) return 'לפני שעה';
-  if (diffHours < 24) return `לפני ${diffHours} שעות`;
-  if (diffDays === 1) return 'אתמול';
-  return `לפני ${diffDays} ימים`;
 }
 
 export default function NewsGrid({ articles }: Props) {

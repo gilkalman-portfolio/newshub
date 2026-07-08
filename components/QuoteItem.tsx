@@ -2,34 +2,12 @@ import type { Quote } from '@/lib/types';
 import { INVESTOR_CONFIG } from '@/lib/types';
 import { cleanQuoteText } from '@/lib/quotes-display';
 import { isLatin } from '@/lib/text';
+import { relativeTimeHe } from '@/lib/time';
+import { initials } from '@/lib/string';
 
 interface Props {
   quote: Quote;
   animationDelay?: string;
-}
-
-function relativeTimeHe(dateStr: string | null): string {
-  if (!dateStr) return '';
-  const now  = Date.now();
-  const then = new Date(dateStr).getTime();
-  if (isNaN(then)) return '';
-  const diffMins  = Math.floor((now - then) / 60_000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays  = Math.floor(diffHours / 24);
-  if (diffMins < 2)   return 'עכשיו';
-  if (diffMins < 60)  return `לפני ${diffMins} דקות`;
-  if (diffHours === 1) return 'לפני שעה';
-  if (diffHours < 24) return `לפני ${diffHours} שעות`;
-  if (diffDays === 1) return 'אתמול';
-  return `לפני ${diffDays} ימים`;
-}
-
-function initials(name: string): string {
-  return name
-    .split(' ')
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('');
 }
 
 export default function QuoteItem({ quote, animationDelay }: Props) {

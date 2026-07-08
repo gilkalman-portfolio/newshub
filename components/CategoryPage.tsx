@@ -5,36 +5,13 @@ import Link from 'next/link';
 import type { Article, Category } from '@/lib/types';
 import { CATEGORY_LABELS, CATEGORY_COLORS, ALL_CATEGORIES } from '@/lib/types';
 import NewsItem from './NewsItem';
+import { relativeTimeHe, formatHebrewDate } from '@/lib/time';
 
 interface Props {
   category: Category;
   label: string;
   color: string;
   articles: Article[];
-}
-
-function relativeTimeHe(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  if (isNaN(then)) return '';
-  const diffMins = Math.floor((now - then) / 60_000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffMins < 2) return 'עכשיו';
-  if (diffMins < 60) return `לפני ${diffMins} דקות`;
-  if (diffHours === 1) return 'לפני שעה';
-  if (diffHours < 24) return `לפני ${diffHours} שעות`;
-  if (diffDays === 1) return 'אתמול';
-  return `לפני ${diffDays} ימים`;
-}
-
-function formatHebrewDate(date: Date): string {
-  return date.toLocaleDateString('he-IL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
 }
 
 export default function CategoryPage({ category, label, color, articles }: Props) {
