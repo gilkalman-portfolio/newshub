@@ -151,7 +151,7 @@ export default function CategoryPage({ category, label, color, articles }: Props
                 aria-current={isActive ? 'page' : undefined}
                 style={
                   isActive
-                    ? { color: catColor, borderColor: catColor, background: catColor + '18' }
+                    ? { color: catColor, borderColor: catColor, background: `color-mix(in srgb, ${catColor} 9%, transparent)` }
                     : undefined
                 }
               >
@@ -231,16 +231,16 @@ export default function CategoryPage({ category, label, color, articles }: Props
               style={{
                 borderColor: color,
                 color: color,
-                background: color + '18',
+                background: `color-mix(in srgb, ${color} 9%, transparent)`,
               }}
               onMouseEnter={(e) => {
                 const el = e.currentTarget;
                 el.style.background = color;
-                el.style.color = '#000';
+                el.style.color = 'var(--text-hi)';
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget;
-                el.style.background = color + '18';
+                el.style.background = `color-mix(in srgb, ${color} 9%, transparent)`;
                 el.style.color = color;
               }}
             >

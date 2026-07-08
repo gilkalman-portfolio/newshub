@@ -444,16 +444,16 @@ export default function NewsGrid({ articles }: Props) {
               style={{
                 borderColor: catColor,
                 color: catColor,
-                background: catColor + '18',
+                background: `color-mix(in srgb, ${catColor} 9%, transparent)`,
               }}
               onMouseEnter={(e) => {
                 const el = e.currentTarget;
                 el.style.background = catColor;
-                el.style.color = '#000';
+                el.style.color = 'var(--text-hi)';
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget;
-                el.style.background = catColor + '18';
+                el.style.background = `color-mix(in srgb, ${catColor} 9%, transparent)`;
                 el.style.color = catColor;
               }}
             >
