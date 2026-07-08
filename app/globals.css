@@ -556,6 +556,11 @@ header {
   max-width: 60%;
 }
 
+.quote-item .meta-time {
+  font-size: 9px;
+  white-space: nowrap;
+}
+
 /* QUOTES PAGE CARD */
 .quote-page-card {
   display: block;
@@ -590,12 +595,12 @@ header {
 
 .panel {
   position: fixed;
-  top: 0; inset-inline-end: 0;
+  top: 0; inset-inline-start: 0;
   width: var(--panel-w);
   max-width: 95vw;
   height: 100vh;
   background: var(--surface);
-  border-inline-start: 1px solid var(--border-2);
+  border-inline-end: 1px solid var(--border-2);
   z-index: 400;
   overflow-y: auto;
   transform: translateX(100%);
@@ -880,7 +885,7 @@ header {
   font-size: 10px;
   color: var(--text-muted);
   letter-spacing: 0.08em;
-  margin-inline-start: 4px;
+  margin-inline-end: 4px;
 }
 
 .cat-tab {
