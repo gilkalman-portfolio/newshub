@@ -577,12 +577,12 @@ header {
 
 .panel {
   position: fixed;
-  top: 0; right: 0;
+  top: 0; inset-inline-end: 0;
   width: var(--panel-w);
   max-width: 95vw;
   height: 100vh;
   background: var(--surface);
-  border-left: 1px solid var(--border-2);
+  border-inline-start: 1px solid var(--border-2);
   z-index: 400;
   overflow-y: auto;
   transform: translateX(100%);
@@ -867,7 +867,7 @@ header {
   font-size: 10px;
   color: var(--text-muted);
   letter-spacing: 0.08em;
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
 
 .cat-tab {
@@ -1322,8 +1322,7 @@ header {
   line-height: 1.75;
   color: #111827;
   margin: 0;
-  direction: rtl;
-  text-align: right;
+  text-align: start;
 }
 .twits-summary-label {
   font-size: 10px;
