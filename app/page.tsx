@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Article, Category } from '@/lib/types';
+import type { Article, AgentColumn, Category } from '@/lib/types';
 import NewsGrid from '@/components/NewsGrid';
 import { formatHebrewDate } from '@/lib/time';
 
@@ -49,8 +49,37 @@ async function fetchArticles(): Promise<Record<Category, Article[]>> {
   return grouped;
 }
 
+// Latest published column for the homepage strip. Any error, missing table
+// (migration not yet applied), or empty result degrades to null — must never
+// break the homepage.
+async function fetchLatestColumn(): Promise<AgentColumn | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key) return null;
+
+  const supabase = createClient(url, key);
+
+  const { data, error } = await supabase
+    .from('agent_columns')
+    .select('*')
+    .eq('published', true)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (error || !data || data.length === 0) {
+    if (error) console.error('[page] agent_columns fetch error:', error.message);
+    return null;
+  }
+
+  return data[0] as AgentColumn;
+}
+
 export default async function HomePage() {
-  const articles = await fetchArticles();
+  const [articles, column] = await Promise.all([
+    fetchArticles(),
+    fetchLatestColumn(),
+  ]);
 
   const totalArticles = CATEGORIES.reduce(
     (sum, cat) => sum + articles[cat].length,
@@ -78,5 +107,5 @@ export default async function HomePage() {
     );
   }
 
-  return <NewsGrid articles={articles} />;
+  return <NewsGrid articles={articles} column={column} />;
 }

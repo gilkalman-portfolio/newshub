@@ -9,9 +9,11 @@
     "lint": "next lint",
     "fetch": "tsx --require ./scripts/_load-env.cjs scripts/fetch.ts",
     "migrate": "tsx --require ./scripts/_load-env.cjs scripts/migrate.ts",
-    "test:gemini": "tsx --require ./scripts/_load-env.cjs scripts/test-gemini.ts"
+    "test:gemini": "tsx --require ./scripts/_load-env.cjs scripts/test-gemini.ts",
+    "agent": "tsx --require ./scripts/_load-env.cjs agent/run.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
     "@google/generative-ai": "^0.21.0",
     "@supabase/supabase-js": "^2.47.0",
     "@types/ws": "^8.18.1",

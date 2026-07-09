@@ -68,3 +68,47 @@ export const INVESTOR_CONFIG: Record<string, { name: string; firm: string; color
   CathieDWood:   { name: 'Cathie Wood',   firm: 'ARK Invest',        color: '#8b5cf6' },
   // Druckenmiller אין לו חשבון X פעיל — להוסיף handle כשיימצא
 };
+
+// ---------------------------------------------------------------------------
+// Autonomous editorial agent — mirrors supabase/migrations/003_editorial_agent.sql
+// ---------------------------------------------------------------------------
+
+// Snapshot of a source article cited by the agent (survives `articles` pruning).
+export interface AgentSourceRef {
+  title_he: string;
+  url: string;
+  source: string;
+  category: string;
+}
+
+// A candidate story the agent weighed before choosing its lead story.
+export interface AgentCandidate {
+  title_he: string;
+  url: string;
+  source: string;
+  category: string;
+  note: string;
+}
+
+// One published (or draft) opinion column written by the agent.
+export interface AgentColumn {
+  id: string;
+  run_id: string;
+  title_he: string;
+  body_he: string;
+  source_refs: AgentSourceRef[];
+  category: string | null;
+  model: string | null;
+  created_at: string;
+  published: boolean;
+}
+
+// Per-run transparency log: candidates considered + reasoning, in Hebrew.
+export interface AgentDecisionLog {
+  id: string;
+  run_id: string;
+  candidates_considered: AgentCandidate[];
+  chosen: AgentSourceRef | null;
+  reasoning_he: string | null;
+  created_at: string;
+}

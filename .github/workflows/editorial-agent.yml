@@ -1,0 +1,51 @@
+name: Editorial Agent (twice daily)
+
+on:
+  schedule:
+    - cron: '0 4,15 * * *'  # 04:00 and 15:00 UTC
+  workflow_dispatch:         # Allow manual trigger for testing
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: editorial-agent
+  cancel-in-progress: false
+
+jobs:
+  run-agent:
+    name: run-agent
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_AGENT_KEY: ${{ secrets.SUPABASE_AGENT_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run editorial agent
+        run: npx tsx agent/run.ts
+
+      - name: Create failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Editorial agent run failed $(date -u +'%Y-%m-%d %H:%M UTC')" \
+            --body "The editorial agent workflow failed. See the run for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

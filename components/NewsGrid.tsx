@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import type { Article, Category, Quote } from '@/lib/types';
+import type { Article, AgentColumn, Category, Quote } from '@/lib/types';
 import { refreshNews } from '@/app/actions';
 import { CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_ICONS } from '@/lib/types';
 import { isDisplayableQuote } from '@/lib/quotes-display';
@@ -11,6 +11,7 @@ import { relativeTimeHe, formatHebrewDate } from '@/lib/time';
 import NewsItem from './NewsItem';
 import QuoteItem from './QuoteItem';
 import SiteHeader from './SiteHeader';
+import AgentColumnStrip from './AgentColumnStrip';
 
 type RegionFilter = 'all' | 'israel' | 'world';
 
@@ -30,6 +31,7 @@ const REGION_TABS: { id: RegionFilter; label: string }[] = [
 
 interface Props {
   articles: Record<Category, Article[]>;
+  column?: AgentColumn | null;
 }
 
 // RTL column order: rightmost category first visually
@@ -59,7 +61,7 @@ function animDelay(colIdx: number, itemIdx: number): string {
   return `${(base + perItem).toFixed(2)}s`;
 }
 
-export default function NewsGrid({ articles }: Props) {
+export default function NewsGrid({ articles, column = null }: Props) {
   const router = useRouter();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [scrollPct, setScrollPct] = useState(0);
@@ -228,6 +230,10 @@ export default function NewsGrid({ articles }: Props) {
               <span className="refresh-icon" style={{ fontSize: 14 }} aria-hidden="true">📈</span>
               <span className="refresh-label">מניות</span>
             </Link>
+            <Link href="/column" className="refresh-btn" title="הטור של הסוכן">
+              <span className="refresh-icon" style={{ fontSize: 14 }} aria-hidden="true">🤖</span>
+              <span className="refresh-label">הטור</span>
+            </Link>
             <button
               className={`refresh-btn${refreshing ? ' refreshing' : ''}${refreshError ? ' refresh-err' : ''}`}
               onClick={handleRefresh}
@@ -266,6 +272,9 @@ export default function NewsGrid({ articles }: Props) {
           ))}
         </div>
       </nav>
+
+      {/* Autonomous editorial agent — latest published column preview */}
+      <AgentColumnStrip column={column} />
 
       {/* 5-column grid */}
       <main className="grid">
