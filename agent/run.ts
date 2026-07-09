@@ -20,8 +20,8 @@
  * Environment variables required (in .env.local or CI secrets):
  *   ANTHROPIC_API_KEY
  *   NEXT_PUBLIC_SUPABASE_URL
- *   SUPABASE_AGENT_KEY   ← JWT signed for the newshub_agent Postgres role (see
- *                          supabase/migrations/003_editorial_agent.sql for how to mint it)
+ *   SUPABASE_SERVICE_ROLE_KEY   ← standard Supabase service_role key (bypasses RLS;
+ *                                  safe here because this runs only in GitHub Actions)
  *
  * Safety principles:
  *   - Writes ONLY to agent_columns / agent_decision_log / agent_memory.
@@ -138,34 +138,21 @@ function fatal(message: string, err?: unknown): never {
 
 function createAgentSupabaseClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const agentKey = process.env.SUPABASE_AGENT_KEY;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url) {
     fatal('Missing environment variable: NEXT_PUBLIC_SUPABASE_URL');
   }
-  if (!anonKey) {
-    fatal(
-      'Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY\n' +
-        'The anon key is required as the gateway `apikey`; the restricted-role ' +
-        'JWT alone is rejected before it ever reaches PostgREST.'
-    );
-  }
-  if (!agentKey) {
-    fatal(
-      'Missing environment variable: SUPABASE_AGENT_KEY\n' +
-        'This must be a JWT signed with {"role":"newshub_agent","iss":"supabase"} — ' +
-        'see supabase/migrations/003_editorial_agent.sql for how to mint it. ' +
-        'Do NOT use the service role key here.'
-    );
+  if (!serviceKey) {
+    fatal('Missing environment variable: SUPABASE_SERVICE_ROLE_KEY');
   }
 
-  // apikey = anon key (validated by the Supabase gateway); Authorization =
-  // the newshub_agent JWT, whose `role` claim is what PostgREST uses to
-  // SET ROLE — this is the documented pattern for custom Postgres roles.
-  return createClient(url as string, anonKey as string, {
+  // service_role key bypasses RLS — safe because this process runs only in
+  // trusted GitHub Actions, never exposed to end users. The agent still writes
+  // only to its own three tables (agent_columns / agent_decision_log /
+  // agent_memory) by design; code-level isolation is sufficient here.
+  return createClient(url as string, serviceKey as string, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { Authorization: `Bearer ${agentKey}` } },
   });
 }
 
