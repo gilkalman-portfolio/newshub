@@ -36,7 +36,6 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
 import type { Category } from '../lib/types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -55,7 +54,7 @@ const CONFIG = {
   maxArticleChars: 8_000,
   bodyWordMin: 150,
   bodyWordMax: 400,
-  model: 'claude-sonnet-5',
+  model: 'anthropic/claude-sonnet-4-5',
 } as const;
 
 // Hebrew + English buy/sell-advice phrases. Case-insensitive substring match
@@ -220,91 +219,76 @@ function candidateLine(c: ArticleCandidate): string {
 // Claude API calls
 // ---------------------------------------------------------------------------
 
-const SELECTION_SCHEMA = {
-  type: 'object',
-  properties: {
-    chosen: {
-      type: 'object',
-      properties: {
-        url: { type: 'string' },
-      },
-      required: ['url'],
-      additionalProperties: false,
-    },
-    supporting_urls: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-    runner_ups: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          url: { type: 'string' },
-          note: { type: 'string' },
-        },
-        required: ['url', 'note'],
-        additionalProperties: false,
-      },
-    },
-    reasoning_he: { type: 'string' },
-  },
-  required: ['chosen', 'supporting_urls', 'runner_ups', 'reasoning_he'],
-  additionalProperties: false,
-} as const;
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-const COLUMN_SCHEMA = {
-  type: 'object',
-  properties: {
-    title_he: { type: 'string' },
-    body_he: { type: 'string' },
-    source_refs: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          url: { type: 'string' },
-        },
-        required: ['url'],
-        additionalProperties: false,
-      },
-    },
-    memory_update: { type: 'string' },
-  },
-  required: ['title_he', 'body_he', 'source_refs', 'memory_update'],
-  additionalProperties: false,
-} as const;
+async function callOpenRouter(
+  system: string,
+  user: string,
+  label: string
+): Promise<string> {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) fatal('Missing environment variable: OPENROUTER_API_KEY');
 
-function extractTextBlock(response: Anthropic.Messages.Message): string {
-  const textBlock = response.content.find(
-    (b): b is Anthropic.Messages.TextBlock => b.type === 'text'
-  );
-  if (!textBlock) {
-    fatal('Claude response contained no text block to parse.');
+  const res = await fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://newshub-ruby.vercel.app',
+      'X-Title': 'NewsHUB Editorial Agent',
+    },
+    body: JSON.stringify({
+      model: CONFIG.model,
+      max_tokens: 8000,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    fatal(`OpenRouter ${label} failed (HTTP ${res.status}): ${body.slice(0, 300)}`);
   }
-  return textBlock.text;
+
+  const data = await res.json();
+  const choice = data.choices?.[0];
+
+  if (choice?.finish_reason === 'length') {
+    fatal(`OpenRouter ${label} hit max_tokens — response truncated.`);
+  }
+
+  const text: string = choice?.message?.content?.trim() ?? '';
+  if (!text) fatal(`OpenRouter ${label} returned empty response.`);
+  return text;
 }
 
-function checkStopReason(response: Anthropic.Messages.Message, label: string): void {
-  if (response.stop_reason === 'refusal') {
-    fatal(`Claude refused during ${label}.`);
+/** Extract the first JSON object from a model response (strips markdown fences). */
+function extractJson(raw: string, label: string): unknown {
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {}
+  const block = cleaned.match(/\{[\s\S]*\}/);
+  if (block) {
+    try { return JSON.parse(block[0]); } catch {}
   }
-  if (response.stop_reason === 'max_tokens') {
-    fatal(`Claude hit max_tokens during ${label} — response likely truncated.`);
-  }
+  fatal(`Failed to parse JSON from ${label} response.`);
 }
 
 async function selectStory(
-  client: Anthropic,
   constitution: string,
   memory: string,
   candidates: ArticleCandidate[]
 ): Promise<SelectionResult> {
   const capped = candidates.slice(0, CONFIG.maxCandidatesToModel);
 
-  const system = `${constitution}\n\n---\n\nזיכרון מהרצות קודמות (אם קיים):\n${
-    memory || '(אין זיכרון קודם — זו אחת ההרצות הראשונות)'
-  }`;
+  const system =
+    `${constitution}\n\n---\n\nזיכרון מהרצות קודמות (אם קיים):\n${
+      memory || '(אין זיכרון קודם — זו אחת ההרצות הראשונות)'
+    }\n\n---\n\nחובה: החזר JSON בלבד ללא טקסט לפני או אחרי, בפורמט:\n` +
+    `{"chosen":{"url":"..."},"supporting_urls":["..."],"runner_ups":[{"url":"...","note":"..."}],"reasoning_he":"..."}`;
 
   const userContent =
     `להלן ${capped.length} מועמדים לסיפור המוביל של היום, מתוך 24 השעות האחרונות. ` +
@@ -313,39 +297,22 @@ async function selectStory(
     `ורשום גם כמה "מועמדים שכמעט נבחרו" (runner_ups) עם הערה קצרה לכל אחד.\n\n` +
     capped.map(candidateLine).join('\n\n---\n\n');
 
-  const response = await client.messages.create({
-    model: CONFIG.model,
-    max_tokens: 8000,
-    system,
-    messages: [{ role: 'user', content: userContent }],
-    output_config: {
-      format: { type: 'json_schema', schema: SELECTION_SCHEMA },
-    },
-  } as Anthropic.Messages.MessageCreateParamsNonStreaming);
-
-  checkStopReason(response, 'story selection (call #1)');
-  const text = extractTextBlock(response);
-
-  let parsed: SelectionResult;
-  try {
-    parsed = JSON.parse(text) as SelectionResult;
-  } catch (err) {
-    fatal('Failed to parse JSON from story-selection response.', err);
-  }
-  return parsed!;
+  const text = await callOpenRouter(system, userContent, 'story selection (call #1)');
+  return extractJson(text, 'story selection') as SelectionResult;
 }
 
 async function writeColumn(
-  client: Anthropic,
   constitution: string,
   memory: string,
   chosen: ArticleCandidate,
   chosenFullText: string,
   supporting: { candidate: ArticleCandidate; fullText: string }[]
 ): Promise<ColumnResult> {
-  const system = `${constitution}\n\n---\n\nזיכרון מהרצות קודמות (אם קיים):\n${
-    memory || '(אין זיכרון קודם — זו אחת ההרצות הראשונות)'
-  }`;
+  const system =
+    `${constitution}\n\n---\n\nזיכרון מהרצות קודמות (אם קיים):\n${
+      memory || '(אין זיכרון קודם — זו אחת ההרצות הראשונות)'
+    }\n\n---\n\nחובה: החזר JSON בלבד ללא טקסט לפני או אחרי, בפורמט:\n` +
+    `{"title_he":"...","body_he":"...","source_refs":[{"url":"..."}],"memory_update":"..."}`;
 
   const sourcesBlock = [
     `### מקור ראשי\nURL: ${chosen.url}\nכותרת: ${chosen.title_he}\nמקור: ${chosen.source}\nטקסט מלא (או תקציר אם השליפה נכשלה):\n${chosenFullText}`,
@@ -363,26 +330,8 @@ async function writeColumn(
     `(למשל: איזה זווית כבר כוסתה, כדי לא לחזור על עצמך).\n\n` +
     sourcesBlock;
 
-  const response = await client.messages.create({
-    model: CONFIG.model,
-    max_tokens: 8000,
-    system,
-    messages: [{ role: 'user', content: userContent }],
-    output_config: {
-      format: { type: 'json_schema', schema: COLUMN_SCHEMA },
-    },
-  } as Anthropic.Messages.MessageCreateParamsNonStreaming);
-
-  checkStopReason(response, 'column writing (call #2)');
-  const text = extractTextBlock(response);
-
-  let parsed: ColumnResult;
-  try {
-    parsed = JSON.parse(text) as ColumnResult;
-  } catch (err) {
-    fatal('Failed to parse JSON from column-writing response.', err);
-  }
-  return parsed!;
+  const text = await callOpenRouter(system, userContent, 'column writing (call #2)');
+  return extractJson(text, 'column writing') as ColumnResult;
 }
 
 // ---------------------------------------------------------------------------
@@ -398,12 +347,11 @@ async function main(): Promise<void> {
   console.log(`[agent] run_id: ${runId}`);
   console.log(`${'='.repeat(60)}\n`);
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    fatal('Missing environment variable: ANTHROPIC_API_KEY');
+  if (!process.env.OPENROUTER_API_KEY) {
+    fatal('Missing environment variable: OPENROUTER_API_KEY');
   }
 
   const supabase = createAgentSupabaseClient();
-  const anthropic = new Anthropic();
 
   // ── Step 1: fetch articles from the last 24h, all categories ─────────────
 
@@ -468,7 +416,7 @@ async function main(): Promise<void> {
 
   let selection: SelectionResult;
   try {
-    selection = await selectStory(anthropic, constitution!, memory, candidates);
+    selection = await selectStory(constitution!, memory, candidates);
   } catch (err) {
     fatal('Story-selection API call failed.', err);
     return; // unreachable, satisfies TS control-flow analysis
@@ -524,7 +472,6 @@ async function main(): Promise<void> {
   let column: ColumnResult;
   try {
     column = await writeColumn(
-      anthropic,
       constitution!,
       memory,
       chosenCandidate,
