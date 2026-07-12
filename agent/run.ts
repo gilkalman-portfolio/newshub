@@ -103,6 +103,50 @@ interface CandidateLogEntry {
   note: string;
 }
 
+/** One entry in the persistent recent-URL list stored in agent_memory. */
+interface RecentChosenEntry {
+  url: string;
+  date: string; // YYYY-MM-DD UTC
+}
+
+// ---------------------------------------------------------------------------
+// Recent-URL tracking helpers — managed in code, not by the model
+// ---------------------------------------------------------------------------
+
+const RECENT_HEADER_RE = /^RECENT_CHOSEN_URLS: (\[[\s\S]*?\])\n/;
+const RECENT_WINDOW_DAYS = 7;
+
+function parseRecentUrls(memory: string): RecentChosenEntry[] {
+  const m = memory.match(RECENT_HEADER_RE);
+  if (!m) return [];
+  try {
+    return JSON.parse(m[1]) as RecentChosenEntry[];
+  } catch {
+    return [];
+  }
+}
+
+function blockedUrlSet(memory: string): Set<string> {
+  const cutoff = new Date(Date.now() - RECENT_WINDOW_DAYS * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  return new Set(
+    parseRecentUrls(memory)
+      .filter((e) => e.date >= cutoff)
+      .map((e) => e.url)
+  );
+}
+
+function appendChosenUrl(memory: string, url: string, todayIso: string): string {
+  const cutoff = new Date(Date.now() - RECENT_WINDOW_DAYS * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const existing = parseRecentUrls(memory).filter((e) => e.date >= cutoff);
+  const updated: RecentChosenEntry[] = [{ url, date: todayIso }, ...existing];
+  const narrative = memory.replace(RECENT_HEADER_RE, '');
+  return `RECENT_CHOSEN_URLS: ${JSON.stringify(updated)}\n${narrative}`;
+}
+
 /** Structured output of Claude API call #1 (story selection). */
 interface SelectionResult {
   chosen: { url: string };
@@ -408,15 +452,25 @@ async function main(): Promise<void> {
   const memory: string = memoryRow?.content ?? '';
   console.log(`[agent] Loaded memory (${memory.length} chars).`);
 
+  // Filter out articles whose exact URL was chosen in the last 7 days.
+  const blocked = blockedUrlSet(memory);
+  const filteredCandidates = candidates.filter((c) => !blocked.has(c.url));
+  if (blocked.size > 0) {
+    console.log(
+      `[agent] Blocking ${blocked.size} recently-chosen URL(s); ` +
+        `${filteredCandidates.length} candidates remain.`
+    );
+  }
+
   // ── Step 3: Claude API call #1 — story selection ──────────────────────────
 
   console.log(
-    `[agent] Calling Claude for story selection (${Math.min(candidates.length, CONFIG.maxCandidatesToModel)} candidates)…`
+    `[agent] Calling Claude for story selection (${Math.min(filteredCandidates.length, CONFIG.maxCandidatesToModel)} candidates)…`
   );
 
   let selection: SelectionResult;
   try {
-    selection = await selectStory(constitution!, memory, candidates);
+    selection = await selectStory(constitution!, memory, filteredCandidates);
   } catch (err) {
     fatal('Story-selection API call failed.', err);
     return; // unreachable, satisfies TS control-flow analysis
@@ -585,7 +639,12 @@ async function main(): Promise<void> {
     fatal(`Failed to insert agent_decision_log row: ${logInsertError.message}`);
   }
 
-  const memoryUpdate = (column.memory_update ?? '').slice(0, 1500);
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const narrativeUpdate = (column.memory_update ?? '').slice(0, 1500);
+  // Build updated URL header, then attach model's narrative (replaces old narrative).
+  const updatedMemoryWithHeader = appendChosenUrl(memory, chosenCandidate.url, todayIso);
+  const headerLine = updatedMemoryWithHeader.match(RECENT_HEADER_RE)?.[0] ?? '';
+  const memoryUpdate = `${headerLine}${narrativeUpdate}`;
   console.log('[agent] Updating agent_memory…');
   const { error: memoryUpdateError } = await supabase
     .from('agent_memory')
