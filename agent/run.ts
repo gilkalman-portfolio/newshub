@@ -629,7 +629,7 @@ async function main(): Promise<void> {
     source_refs: sourceRefs,
     category: chosenCandidate.category,
     model: CONFIG.model,
-    published: false,
+    published: true,
   });
   if (columnInsertError) {
     fatal(`Failed to insert agent_columns row: ${columnInsertError.message}`);
