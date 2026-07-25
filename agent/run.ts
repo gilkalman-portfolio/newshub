@@ -555,10 +555,15 @@ async function main(): Promise<void> {
   if (!column.source_refs || column.source_refs.length === 0) {
     fatal('Validation failed: source_refs is empty.');
   }
-  for (const ref of column.source_refs) {
-    if (!fetchedCandidateUrls.has(ref.url)) {
-      fatal(`Validation failed: source_refs contains a URL not among fetched candidates: ${ref.url}`);
-    }
+  const invalidRefs = column.source_refs.filter((ref) => !fetchedCandidateUrls.has(ref.url));
+  if (invalidRefs.length > 0) {
+    console.warn(
+      `[agent] Filtering ${invalidRefs.length} hallucinated source_ref(s): ${invalidRefs.map((r) => r.url).join(', ')}`
+    );
+    column.source_refs = column.source_refs.filter((ref) => fetchedCandidateUrls.has(ref.url));
+  }
+  if (column.source_refs.length === 0) {
+    fatal('Validation failed: all source_refs were hallucinated (no valid URLs remain).');
   }
   const combinedText = `${column.title_he}\n${column.body_he}`;
   const forbiddenHit = containsForbiddenKeyword(combinedText);
