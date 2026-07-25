@@ -197,7 +197,7 @@ function createAgentSupabaseClient(): SupabaseClient {
   // agent_memory) by design; code-level isolation is sufficient here.
   return createClient(url as string, serviceKey as string, {
     auth: { persistSession: false, autoRefreshToken: false },
-    realtime: { transport: ws },
+    realtime: { transport: ws as any },
   });
 }
 
