@@ -36,6 +36,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import ws from 'ws';
 import type { Category } from '../lib/types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -196,6 +197,7 @@ function createAgentSupabaseClient(): SupabaseClient {
   // agent_memory) by design; code-level isolation is sufficient here.
   return createClient(url as string, serviceKey as string, {
     auth: { persistSession: false, autoRefreshToken: false },
+    realtime: { transport: ws },
   });
 }
 
