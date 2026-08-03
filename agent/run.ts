@@ -270,10 +270,23 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 async function callOpenRouter(
   system: string,
   user: string,
-  label: string
+  label: string,
+  jsonMode = false
 ): Promise<string> {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) fatal('Missing environment variable: OPENROUTER_API_KEY');
+
+  const body: Record<string, unknown> = {
+    model: CONFIG.model,
+    max_tokens: 8000,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
+  };
+  if (jsonMode) {
+    body.response_format = { type: 'json_object' };
+  }
 
   const res = await fetch(OPENROUTER_URL, {
     method: 'POST',
@@ -283,14 +296,7 @@ async function callOpenRouter(
       'HTTP-Referer': 'https://newshub-ruby.vercel.app',
       'X-Title': 'NewsHUB Editorial Agent',
     },
-    body: JSON.stringify({
-      model: CONFIG.model,
-      max_tokens: 8000,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -320,6 +326,7 @@ function extractJson(raw: string, label: string): unknown {
   if (block) {
     try { return JSON.parse(block[0]); } catch {}
   }
+  console.error(`[agent] Raw response from ${label} (first 1000 chars):\n${raw.slice(0, 1000)}`);
   fatal(`Failed to parse JSON from ${label} response.`);
 }
 
@@ -343,7 +350,7 @@ async function selectStory(
     `ורשום גם כמה "מועמדים שכמעט נבחרו" (runner_ups) עם הערה קצרה לכל אחד.\n\n` +
     capped.map(candidateLine).join('\n\n---\n\n');
 
-  const text = await callOpenRouter(system, userContent, 'story selection (call #1)');
+  const text = await callOpenRouter(system, userContent, 'story selection (call #1)', true);
   return extractJson(text, 'story selection') as SelectionResult;
 }
 
@@ -376,7 +383,7 @@ async function writeColumn(
     `(למשל: איזה זווית כבר כוסתה, כדי לא לחזור על עצמך).\n\n` +
     sourcesBlock;
 
-  const text = await callOpenRouter(system, userContent, 'column writing (call #2)');
+  const text = await callOpenRouter(system, userContent, 'column writing (call #2)', true);
   return extractJson(text, 'column writing') as ColumnResult;
 }
 
