@@ -318,7 +318,8 @@ async function callOpenRouter(
 
 /** Extract the first JSON object from a model response (strips markdown fences). */
 function extractJson(raw: string, label: string): unknown {
-  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  // Trim first so trailing \n after closing ``` doesn't block the regex
+  const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
   try {
     return JSON.parse(cleaned);
   } catch {}
@@ -326,7 +327,9 @@ function extractJson(raw: string, label: string): unknown {
   if (block) {
     try { return JSON.parse(block[0]); } catch {}
   }
-  console.error(`[agent] Raw response from ${label} (first 1000 chars):\n${raw.slice(0, 1000)}`);
+  console.error(
+    `[agent] Raw response from ${label} (${raw.length} chars total, first 3000 shown):\n${raw.slice(0, 3000)}`
+  );
   fatal(`Failed to parse JSON from ${label} response.`);
 }
 
