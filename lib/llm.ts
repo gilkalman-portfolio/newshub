@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, type GenerationConfig } from '@google/generative-ai';
 
 const GEMINI_API_KEY     = process.env.GEMINI_API_KEY;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -44,7 +44,15 @@ async function callGemini(
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
   const m = genAI.getGenerativeModel({
     model,
-    generationConfig: { temperature, maxOutputTokens: maxTokens },
+    // 2.5 models think by default, which eats maxOutputTokens on hidden
+    // reasoning and truncates the visible answer. This SDK predates
+    // thinkingConfig in its types, but the field passes straight through
+    // to the REST body, so disable it via a cast.
+    generationConfig: {
+      temperature,
+      maxOutputTokens: maxTokens,
+      thinkingConfig: { thinkingBudget: 0 },
+    } as GenerationConfig,
   });
   const result = await m.generateContent(prompt);
   return result.response.text().trim();
