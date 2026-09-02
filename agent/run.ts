@@ -55,7 +55,7 @@ const CONFIG = {
   maxArticleChars: 8_000,
   bodyWordMin: 150,
   bodyWordMax: 400,
-  model: 'anthropic/claude-sonnet-4-5',
+  model: 'anthropic/claude-sonnet-5',
 } as const;
 
 // Hebrew + English buy/sell-advice phrases. Case-insensitive substring match
@@ -162,6 +162,23 @@ interface ColumnResult {
   body_he: string;
   source_refs: { url: string }[];
   memory_update: string;
+}
+
+/** Token/cost accounting for a single OpenRouter call (from response.usage). */
+interface OpenRouterUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  costUsd: number;
+}
+
+function sumUsage(a: OpenRouterUsage, b: OpenRouterUsage): OpenRouterUsage {
+  return {
+    promptTokens: a.promptTokens + b.promptTokens,
+    completionTokens: a.completionTokens + b.completionTokens,
+    totalTokens: a.totalTokens + b.totalTokens,
+    costUsd: a.costUsd + b.costUsd,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -272,7 +289,7 @@ async function callOpenRouter(
   user: string,
   label: string,
   jsonMode = false
-): Promise<string> {
+): Promise<{ text: string; usage: OpenRouterUsage }> {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) fatal('Missing environment variable: OPENROUTER_API_KEY');
 
@@ -313,7 +330,19 @@ async function callOpenRouter(
 
   const text: string = choice?.message?.content?.trim() ?? '';
   if (!text) fatal(`OpenRouter ${label} returned empty response.`);
-  return text;
+
+  const usage: OpenRouterUsage = {
+    promptTokens: data.usage?.prompt_tokens ?? 0,
+    completionTokens: data.usage?.completion_tokens ?? 0,
+    totalTokens: data.usage?.total_tokens ?? 0,
+    costUsd: data.usage?.cost ?? 0,
+  };
+  console.log(
+    `[agent] ${label} usage: ${usage.promptTokens} prompt + ${usage.completionTokens} completion ` +
+      `= ${usage.totalTokens} tokens ($${usage.costUsd.toFixed(4)})`
+  );
+
+  return { text, usage };
 }
 
 /** Extract the first JSON object from a model response (strips markdown fences). */
@@ -337,7 +366,7 @@ async function selectStory(
   constitution: string,
   memory: string,
   candidates: ArticleCandidate[]
-): Promise<SelectionResult> {
+): Promise<{ result: SelectionResult; usage: OpenRouterUsage }> {
   const capped = candidates.slice(0, CONFIG.maxCandidatesToModel);
 
   const system =
@@ -353,8 +382,8 @@ async function selectStory(
     `ורשום גם כמה "מועמדים שכמעט נבחרו" (runner_ups) עם הערה קצרה לכל אחד.\n\n` +
     capped.map(candidateLine).join('\n\n---\n\n');
 
-  const text = await callOpenRouter(system, userContent, 'story selection (call #1)', true);
-  return extractJson(text, 'story selection') as SelectionResult;
+  const { text, usage } = await callOpenRouter(system, userContent, 'story selection (call #1)', true);
+  return { result: extractJson(text, 'story selection') as SelectionResult, usage };
 }
 
 async function writeColumn(
@@ -363,7 +392,7 @@ async function writeColumn(
   chosen: ArticleCandidate,
   chosenFullText: string,
   supporting: { candidate: ArticleCandidate; fullText: string }[]
-): Promise<ColumnResult> {
+): Promise<{ result: ColumnResult; usage: OpenRouterUsage }> {
   const system =
     `${constitution}\n\n---\n\nזיכרון מהרצות קודמות (אם קיים):\n${
       memory || '(אין זיכרון קודם — זו אחת ההרצות הראשונות)'
@@ -386,8 +415,8 @@ async function writeColumn(
     `(למשל: איזה זווית כבר כוסתה, כדי לא לחזור על עצמך).\n\n` +
     sourcesBlock;
 
-  const text = await callOpenRouter(system, userContent, 'column writing (call #2)', true);
-  return extractJson(text, 'column writing') as ColumnResult;
+  const { text, usage } = await callOpenRouter(system, userContent, 'column writing (call #2)', true);
+  return { result: extractJson(text, 'column writing') as ColumnResult, usage };
 }
 
 // ---------------------------------------------------------------------------
@@ -481,8 +510,11 @@ async function main(): Promise<void> {
   );
 
   let selection: SelectionResult;
+  let selectionUsage: OpenRouterUsage;
   try {
-    selection = await selectStory(constitution!, memory, filteredCandidates);
+    const r = await selectStory(constitution!, memory, filteredCandidates);
+    selection = r.result;
+    selectionUsage = r.usage;
   } catch (err) {
     fatal('Story-selection API call failed.', err);
     return; // unreachable, satisfies TS control-flow analysis
@@ -536,18 +568,27 @@ async function main(): Promise<void> {
   console.log('[agent] Calling Claude to write the column…');
 
   let column: ColumnResult;
+  let columnUsage: OpenRouterUsage;
   try {
-    column = await writeColumn(
+    const r = await writeColumn(
       constitution!,
       memory,
       chosenCandidate,
       chosenFullText,
       supportingFullTexts
     );
+    column = r.result;
+    columnUsage = r.usage;
   } catch (err) {
     fatal('Column-writing API call failed.', err);
     return;
   }
+
+  const runUsage = sumUsage(selectionUsage, columnUsage);
+  console.log(
+    `[agent] Total OpenRouter usage this run: ${runUsage.totalTokens} tokens ` +
+      `($${runUsage.costUsd.toFixed(4)})`
+  );
 
   // ── Step 6: deterministic validation — ALL must pass or exit 1 ───────────
 
@@ -676,7 +717,11 @@ async function main(): Promise<void> {
   const elapsed = ((Date.now() - startTime.getTime()) / 1000).toFixed(1);
   console.log(`\n${'='.repeat(60)}`);
   console.log(`[agent] Done. run_id=${runId}`);
-  console.log(`[agent] Column: "${column.title_he}" (${words} words, published=false)`);
+  console.log(`[agent] Column: "${column.title_he}" (${words} words, published=true)`);
+  console.log(
+    `[agent] OpenRouter usage: ${runUsage.totalTokens} tokens ($${runUsage.costUsd.toFixed(4)}) ` +
+      `— model: ${CONFIG.model}`
+  );
   console.log(`[agent] Total time: ${elapsed}s`);
   console.log(`${'='.repeat(60)}\n`);
   process.exit(0);
